@@ -49,3 +49,8 @@ object WordsWithSameCount extends ScalaHadoopTool {
     return 0;
   }
 }
+
+
+## Contributor
+**Alex Simma** : Developer of original version of ScalaHadoop.
+
