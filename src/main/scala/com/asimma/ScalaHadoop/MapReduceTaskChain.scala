@@ -141,7 +141,6 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
   def getConf: Configuration = if (conf == null) prev.getConf else conf
 }
 
-
 object MapReduceTaskChain {
   val rand = new scala.util.Random()
 

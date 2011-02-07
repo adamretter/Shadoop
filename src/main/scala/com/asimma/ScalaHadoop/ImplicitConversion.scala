@@ -39,7 +39,6 @@ object ImplicitConversion {
 
   implicit def StringBufferBox(v: StringBuffer) = new Text(v.toString)
 
-
   implicit def MapWritableBox[X <: Writable, Y <: Writable](value: scala.collection.Map[X, Y]): MapWritable = {
     var newMap = new MapWritable()
     value.foreach {

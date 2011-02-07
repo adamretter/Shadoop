@@ -1,6 +1,7 @@
 package com.asimma.ScalaHadoop
 
 import org.apache.hadoop.mapreduce.{Reducer => HReducer}
+import scala.collection.JavaConversions._
 
 abstract class Reducer[KIN, VIN, KOUT, VOUT](implicit kTypeM: Manifest[KOUT], vTypeM: Manifest[VOUT])
   extends HReducer[KIN, VIN, KOUT, VOUT] with OutTyped[KOUT, VOUT] {
@@ -12,7 +13,7 @@ abstract class Reducer[KIN, VIN, KOUT, VOUT](implicit kTypeM: Manifest[KOUT], vT
   def vType = vTypeM.erasure.asInstanceOf[Class[VOUT]]
 
   var k: KIN = _
-  var v: java.lang.Iterable[VIN] = _
+  var v: Iterable[VIN] = _
   var context: ContextType = _
 
   override def reduce(k: KIN, v: java.lang.Iterable[VIN], context: ContextType): Unit = {
