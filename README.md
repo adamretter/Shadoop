@@ -3,6 +3,8 @@ This code provides some syntactic sugar on top of Hadoop in order to make
 it more usable from Scala.  Take a look at Examples.scala for more
 details.
 
+![Arachni logo](https://wave.googleusercontent.com/wave/attachment/hadoop_scala.jpg?id=FpJWZcGV1&key=AH0qf5wAVIl2Xvw7KjDWdPf0rogRBU7MuQ)
+
 ## License
 Apache License, Version 2.0
 
