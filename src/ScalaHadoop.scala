@@ -73,6 +73,23 @@ object MapReduceTaskChain {
      return c; 
    }
   def init(): MapReduceTaskChain[None.type, None.type, None.type, None.type] = init(new Configuration);
+
+  // Expose setX() methods on the Job object via JobModifiers
+  trait JobModifier {
+    def apply(job: Job) : Unit;
+  }
+
+  class SetPartitioner(val partitionerClass: java.lang.Class[_ <: org.apache.hadoop.mapreduce.Partitioner[_, _]]) extends JobModifier {
+    def apply(job: Job) : Unit = { job.setPartitionerClass(partitionerClass); }
+  }
+  def Partitioner(partitionerClass: java.lang.Class[_ <: org.apache.hadoop.mapreduce.Partitioner[_, _]]) =
+      new SetPartitioner(partitionerClass);
+
+  class SetNumReduceTasks(val numReduceTasks: Int) extends JobModifier {
+    def apply(job: Job) : Unit = { job.setNumReduceTasks(numReduceTasks); }
+  }
+  def NumReduceTasks(numReduceTasks: Int) = new SetNumReduceTasks(numReduceTasks);
+
 }
 
 /**
@@ -103,6 +120,7 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
 
   var conf          : Configuration      = null;
   var confModifiers : List[ConfModifier] = List[ConfModifier]();
+  var jobModifiers  : List[JobModifier]  = List[JobModifier]();
 
   val tmpDir : String  = "tmp/tmp-" + MapReduceTaskChain.rand.nextLong();
 
@@ -138,6 +156,14 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
     return chain;
   }
 
+  /** Add a JobModifier to the current task by returning a copy of this chain
+      with the JobModifier pushed onto the jobModifiers list */
+  def -->(jobModifier: JobModifier) : thisType = {
+    val chain = cloneTypesafe;
+    chain.jobModifiers = jobModifier::chain.jobModifiers;
+    return chain;
+  }
+
 
   /** Adds an input source to the chain */
   def -->[K,V](in : IO.Input[K,V]): MapReduceTaskChain[KIN, VIN, K, V] = {
@@ -161,11 +187,13 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
     if(task != null) {
       val conf = getConf; 
       // Off the bat, apply the modifications from all the ConfModifiers we have queued up at this node.
-      confModifiers map ((mod : ConfModifier) => mod(conf));
+      confModifiers foreach ((mod : ConfModifier) => mod(conf));
 
       val job  = new Job(conf, task.name);
       job setJarByClass          classOf[MapOnlyTask[_,_,_,_]];
       task initJob job ;
+      // Apply the modifications from all the JobModifiers we have queued up at this node.
+      jobModifiers foreach ((mod : JobModifier) => mod(job))
 
       // Should never be null; set to SequenceFile with a random temp dirname by default
       job setInputFormatClass    prev.nextInput.inFormatClass; 
@@ -189,14 +217,18 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
 abstract class MapReduceTask[KIN, VIN, KOUT, VOUT]   {
 
   // TODO: Should this be Writable?
-  protected var mapper   : TypedMapper[KIN, VIN, _, _] = null ;
+  protected var mapper   : TypedMapper[KIN, VIN, _, _] = null;
+  protected var combiner : TypedReducer[_, _, _, _] = null;
   protected var reducer  : TypedReducer[_, _, KOUT, VOUT]   = null;
 
   var name = "NO NAME"; 
 
   def initJob(job: Job) = {
     job setMapperClass         mapper.getClass.asInstanceOf[java.lang.Class[ Mapper[_,_,_,_]]];
-    if(reducer != null) {
+    if (combiner != null) {
+      job setCombinerClass  combiner.getClass.asInstanceOf[java.lang.Class[ Reducer[_,_,_,_]]];
+    }
+    if (reducer != null) {
         job setReducerClass       reducer.getClass.asInstanceOf[java.lang.Class[ Reducer[_,_,_,_]]];
         job setMapOutputKeyClass  mapper.kType;
         job setMapOutputValueClass mapper.vType;
@@ -217,21 +249,31 @@ class MapOnlyTask[KIN, VIN, KOUT, VOUT]
 class MapAndReduceTask[KIN, VIN, KOUT, VOUT] 
       extends MapReduceTask[KIN, VIN, KOUT, VOUT]    { }
 
+class MapCombineReduceTask[KIN, VIN, KOUT, VOUT]
+      extends MapReduceTask[KIN, VIN, KOUT, VOUT]    { }
 
 object MapReduceTask {
+    // KTMP and VTMP are the key/value types of the intermediate steps
+    // Map-only version
+    implicit def fromMapper[KIN, VIN, KOUT, VOUT](mapper: TypedMapper[KIN, VIN, KOUT, VOUT])
+        : MapOnlyTask[KIN,VIN,KOUT,VOUT] = MapOnlyTask(mapper);
 
-  // KINT and VINT are the key/value types of the intermediate steps
-    implicit def fromMapper[KIN, VIN, KOUT, VOUT](mapper: TypedMapper[KIN, VIN, KOUT, VOUT]) : MapOnlyTask[KIN,VIN,KOUT,VOUT] = {
-      val mapReduceTask= new MapOnlyTask[KIN, VIN, KOUT, VOUT]();
+    def MapOnlyTask[KIN, VIN, KOUT, VOUT](mapper: TypedMapper[KIN, VIN, KOUT, VOUT], name: String)
+        : MapOnlyTask[KIN,VIN,KOUT,VOUT] = {
+      val mapReduceTask = new MapOnlyTask[KIN, VIN, KOUT, VOUT]();
       mapReduceTask.mapper = mapper;
+      mapReduceTask.name = name;
       return mapReduceTask;
     }
 
+    def MapOnlyTask[KIN, VIN, KOUT, VOUT](mapper: TypedMapper[KIN, VIN, KOUT, VOUT])
+        : MapOnlyTask[KIN,VIN,KOUT,VOUT] = MapOnlyTask(mapper, "NO NAME");
 
+    // Map-and-reduce versions
     def MapReduceTask[KIN, VIN, KOUT, VOUT, KTMP, VTMP]
          (mapper: TypedMapper[KIN, VIN, KTMP, VTMP], reducer: TypedReducer[KTMP, VTMP, KOUT, VOUT], name: String)
          : MapAndReduceTask[KIN, VIN, KOUT, VOUT] = {
-           val mapReduceTask= new MapAndReduceTask[KIN, VIN, KOUT, VOUT]();
+           val mapReduceTask = new MapAndReduceTask[KIN, VIN, KOUT, VOUT]();
            mapReduceTask.mapper  = mapper;
            mapReduceTask.reducer = reducer;
            mapReduceTask.name    = name;
@@ -241,6 +283,25 @@ object MapReduceTask {
     def MapReduceTask[KIN, VIN, KOUT, VOUT, KTMP, VTMP]
          (mapper: TypedMapper[KIN, VIN, KTMP, VTMP], reducer: TypedReducer[KTMP, VTMP, KOUT, VOUT])
          : MapAndReduceTask[KIN, VIN, KOUT, VOUT] = MapReduceTask(mapper, reducer, "NO NAME");
+
+    // Map-combine-and-reduce versions
+    def MapCombineReduceTask[KIN, VIN, KOUT, VOUT, KTMP, VTMP]
+        (mapper: TypedMapper[KIN, VIN, KTMP, VTMP], combiner: TypedReducer[KTMP, VTMP, KTMP, VTMP],
+         reducer: TypedReducer[KTMP, VTMP, KOUT, VOUT], name: String)
+         : MapCombineReduceTask[KIN, VIN, KOUT, VOUT] = {
+          val mapReduceTask = new MapCombineReduceTask[KIN, VIN, KOUT, VOUT]();
+          mapReduceTask.mapper = mapper;
+          mapReduceTask.combiner = combiner;
+          mapReduceTask.reducer = reducer;
+          mapReduceTask.name = name;
+          return mapReduceTask;
+        }
+
+    def MapCombineReduceTask[KIN, VIN, KOUT, VOUT, KTMP, VTMP]
+        (mapper: TypedMapper[KIN, VIN, KTMP, VTMP], combiner: TypedReducer[KTMP, VTMP, KTMP, VTMP],
+         reducer: TypedReducer[KTMP, VTMP, KOUT, VOUT])
+        : MapCombineReduceTask[KIN, VIN, KOUT, VOUT] = MapCombineReduceTask(mapper, combiner, reducer, "NO NAME");
+
 
 }
 
