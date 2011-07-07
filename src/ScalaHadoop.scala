@@ -198,6 +198,8 @@ abstract class MapReduceTask[KIN, VIN, KOUT, VOUT]   {
     job setMapperClass         mapper.getClass.asInstanceOf[java.lang.Class[ Mapper[_,_,_,_]]];
     if(reducer != null) {
         job setReducerClass       reducer.getClass.asInstanceOf[java.lang.Class[ Reducer[_,_,_,_]]];
+        job setMapOutputKeyClass  mapper.kType;
+        job setMapOutputValueClass mapper.vType;
         job setOutputKeyClass     reducer.kType;
         job setOutputValueClass   reducer.vType;
       }
