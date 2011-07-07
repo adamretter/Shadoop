@@ -1,8 +1,10 @@
 <project default="jar">
+  <!-- Import env variables -->
+  <property environment="env"/>
+
   <target name="clean">
     <delete dir="build"/>
   </target>
-
 
   <target name="compile">
     <mkdir dir="build/classes"/>
@@ -28,13 +30,13 @@
   </target>
 
   <target name="run">
-    <exec executable="/Users/asimma/local/hadoop-0.20.2/bin/hadoop">
+    <exec executable="${env.HADOOP_HOME}/bin/hadoop">
        <arg line="jar ScalaHadoop.jar  com.asimma.ScalaHadoop.WordCount"/>
      </exec>
   </target>
 
   <path id="classpath">
-    <fileset dir="/Users/asimma/local/hadoop-0.20.2" includes="**/*.jar"/>
+    <fileset dir="${env.HADOOP_HOME}" includes="**/*.jar"/>
     <fileset dir="/opt/local/share/scala-2.8/lib" includes="*.jar"/>
   </path>
 
