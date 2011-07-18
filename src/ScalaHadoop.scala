@@ -50,6 +50,21 @@ object IO {
                     mIn .erasure.asInstanceOf[Class[lib.input.FileInputFormat[LongWritable,Text]]],
                     mOut.erasure.asInstanceOf[Class[lib.output.FileOutputFormat[K,V]]]);
 
+
+  def MultiSeqFile[K,V](dirNames : Array[String])
+    (implicit mIn:   Manifest[lib.input.SequenceFileInputFormat[K,V]],
+              mOut:  Manifest[lib.output.SequenceFileOutputFormat[K,V]]) =
+    dirNames.map(new IO[K,V,K,V](_,
+                    mIn .erasure.asInstanceOf[Class[lib.input.FileInputFormat[K,V]]],
+                    mOut.erasure.asInstanceOf[Class[lib.output.FileOutputFormat[K,V]]]));
+
+
+  def MultiText[K,V](dirNames : Array[String])
+    (implicit mIn:   Manifest[lib.input.TextInputFormat],
+              mOut:  Manifest[lib.output.TextOutputFormat[K,V]]) =
+    dirNames.map(new IO[K,V,LongWritable,Text](_,
+                    mIn .erasure.asInstanceOf[Class[lib.input.FileInputFormat[LongWritable,Text]]],
+                    mOut.erasure.asInstanceOf[Class[lib.output.FileOutputFormat[K,V]]]));
 }
 
 
@@ -89,7 +104,6 @@ object MapReduceTaskChain {
     def apply(job: Job) : Unit = { job.setNumReduceTasks(numReduceTasks); }
   }
   def NumReduceTasks(numReduceTasks: Int) = new SetNumReduceTasks(numReduceTasks);
-
 }
 
 /**
@@ -125,8 +139,9 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
   val tmpDir : String  = "tmp/tmp-" + MapReduceTaskChain.rand.nextLong();
 
   // TODO:  This is a type system disaster, but the alternatives are worse
-  var nextInput:  IO.Input[KOUT,VOUT]    = 
+  var defaultInput: IO.Input[KOUT,VOUT] =
       new IO.Input(tmpDir,  classOf[lib.input.SequenceFileInputFormat[KOUT,VOUT]]);
+  var inputs: Array[IO.Input[KOUT,VOUT]] = Array();
   var output:     IO.Output[KOUT,VOUT]   = 
       new IO.Output(tmpDir,  classOf[lib.output.SequenceFileOutputFormat[KOUT,VOUT]]);
 
@@ -164,12 +179,19 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
     return chain;
   }
 
-
   /** Adds an input source to the chain */
   def -->[K,V](in : IO.Input[K,V]): MapReduceTaskChain[KIN, VIN, K, V] = {
     val  chain = new  MapReduceTaskChain[KIN, VIN, K, V]();
     chain.prev      = this;
-    chain.nextInput = in;
+    chain.inputs = Array(in);
+    return chain;
+  }
+
+  /** Adds multiple input sources to the chain */
+  def -->[K,V](inputs : Array[IO.Input[K,V]]): MapReduceTaskChain[KIN, VIN, K, V] = {
+    val  chain = new  MapReduceTaskChain[KIN, VIN, K, V]();
+    chain.prev      = this;
+    chain.inputs = inputs;
     return chain;
   }
 
@@ -192,16 +214,24 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
       val job  = new Job(conf, task.name);
       job setJarByClass          classOf[MapOnlyTask[_,_,_,_]];
       task initJob job ;
+
       // Apply the modifications from all the JobModifiers we have queued up at this node.
       jobModifiers foreach ((mod : JobModifier) => mod(job))
 
-      // Should never be null; set to SequenceFile with a random temp dirname by default
-      job setInputFormatClass    prev.nextInput.inFormatClass; 
       job setOutputFormatClass   output.outFormatClass;
-
-      lib.input.FileInputFormat.addInputPath(job, new Path(prev.nextInput.dirName));
       lib.output.FileOutputFormat.setOutputPath(job, new Path(output.dirName));
 
+      if (prev.inputs.isEmpty) {
+        job setInputFormatClass    prev.defaultInput.inFormatClass;
+        System.err.println("Adding input path: " + prev.defaultInput.dirName);
+        lib.input.FileInputFormat.addInputPath(job, new Path(prev.defaultInput.dirName));
+      } else {
+        job setInputFormatClass   prev.inputs(0).inFormatClass;
+        prev.inputs.foreach ((io) => {
+          System.err.println("Adding input path: " + io.dirName);
+          lib.input.FileInputFormat.addInputPath(job, new Path(io.dirName))
+        })
+      }
 
       job waitForCompletion true;
       return true;
