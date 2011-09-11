@@ -157,14 +157,20 @@ object MapReduceTaskChain {
 
   def Param(p: String, v: String) = new SetParam(p, v)
 
-
-  def init(conf: Configuration): MapReduceTaskChain[None.type, None.type, None.type, None.type] = {
+  def apply(conf: Configuration): MapReduceTaskChain[None.type, None.type, None.type, None.type] = {
     val c = new MapReduceTaskChain[None.type, None.type, None.type, None.type]()
     c.conf = conf
     return c
   }
 
-  def init(): MapReduceTaskChain[None.type, None.type, None.type, None.type] = init(new Configuration)
+  def init: MapReduceTaskChain[None.type, None.type, None.type, None.type] = apply(new Configuration)
+
+  // this allow us to use "input --> mapper --> reducer --> out"
+  // TODO: to check how to allow types that subclass IO.Input
+  implicit def -->[K,V](in: IO.Input[K,V]) = {
+    MapReduceTaskChain.init --> in
+  }
+
 
   class SetPartitioner(val partitionerClass: java.lang.Class[_ <: org.apache.hadoop.mapreduce.Partitioner[_, _]]) extends JobModifier {
     def apply(job: Job) : Unit = { job.setPartitionerClass(partitionerClass); }
