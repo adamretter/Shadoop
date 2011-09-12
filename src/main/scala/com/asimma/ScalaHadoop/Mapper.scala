@@ -1,26 +1,24 @@
 package com.asimma.ScalaHadoop
 
+import collection.JavaConversions._
+
 import org.apache.hadoop.mapreduce.{Mapper => HMapper}
+import scala.Some
 
 abstract class Mapper[KIN, VIN, KOUT, VOUT](implicit kTypeM: Manifest[KOUT], vTypeM: Manifest[VOUT])
   extends HMapper[KIN, VIN, KOUT, VOUT] with OutTyped[KOUT, VOUT] {
 
   type ContextType = HMapper[KIN, VIN, KOUT, VOUT]#Context
 
-  def kType = kTypeM.erasure.asInstanceOf[Class[KOUT]]
+	type MapperType = (KIN,VIN) => Iterable[(KOUT,VOUT)]
+	var mapper: Option[MapperType] = None
 
+  def kType = kTypeM.erasure.asInstanceOf[Class[KOUT]]
   def vType = vTypeM.erasure.asInstanceOf[Class[VOUT]]
 
-  var k: KIN = _
-  var v: VIN = _
-  var context: ContextType = _
-
-  override def map(k: KIN, v: VIN, context: ContextType): Unit = {
-    this.k = k
-    this.v = v
-    this.context = context
-    doMap
+	override def map(k: KIN, v: VIN, context: ContextType): Unit = {
+		mapper.map(func => func(k, v).map(pair => context.write(pair._1, pair._2)))
   }
 
-  def doMap: Unit
+	def mapWith(f:MapperType) = mapper = Some(f)
 }
