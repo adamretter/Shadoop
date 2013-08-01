@@ -6,6 +6,7 @@ import org.apache.hadoop.mapreduce.{Reducer => HReducer}
 import org.apache.hadoop.mapreduce.Job
 
 case class MapReduceTask[KIN, VIN, KOUT, VOUT](mapper: Mapper[KIN, VIN, _, _],
+                                               combiner: Option[Reducer[_, _, _, _]],
                                                reducer: Option[Reducer[_, _, KOUT, VOUT]],
                                                name: String) {
 
