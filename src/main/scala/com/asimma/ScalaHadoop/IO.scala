@@ -44,4 +44,20 @@ object IO {
       mIn.erasure.asInstanceOf[Class[lib.input.FileInputFormat[LongWritable, Text]]],
       mOut.erasure.asInstanceOf[Class[lib.output.FileOutputFormat[K, V]]])
 
+
+  def MultiSeqFile[K,V](dirNames : Array[String])
+                       (implicit mIn:   Manifest[lib.input.SequenceFileInputFormat[K,V]],
+                        mOut:  Manifest[lib.output.SequenceFileOutputFormat[K,V]]) =
+    dirNames.map(new IO[K,V,K,V](_,
+      mIn .erasure.asInstanceOf[Class[lib.input.FileInputFormat[K,V]]],
+      mOut.erasure.asInstanceOf[Class[lib.output.FileOutputFormat[K,V]]]));
+
+
+  def MultiText[K,V](dirNames : Array[String])
+                    (implicit mIn:   Manifest[lib.input.TextInputFormat],
+                     mOut:  Manifest[lib.output.TextOutputFormat[K,V]]) =
+    dirNames.map(new IO[K,V,LongWritable,Text](_,
+      mIn .erasure.asInstanceOf[Class[lib.input.FileInputFormat[LongWritable,Text]]],
+      mOut.erasure.asInstanceOf[Class[lib.output.FileOutputFormat[K,V]]]));
+
 }

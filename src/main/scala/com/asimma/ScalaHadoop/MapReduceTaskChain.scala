@@ -34,14 +34,14 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
 
   var conf: Configuration = null
   var confModifiers: List[ConfModifier] = List[ConfModifier]()
+  var jobModifiers: List[JobModifier] = List[JobModifier]()
 
   val tmpDir: String = "tmp/tmp-" + MapReduceTaskChain.rand.nextLong()
 
   // TODO:  This is a type system disaster, but the alternatives are worse
-  var nextInput: IO.Input[KOUT, VOUT] =
-    new IO.Input(tmpDir, classOf[lib.input.SequenceFileInputFormat[KOUT, VOUT]])
-  var output: IO.Output[KOUT, VOUT] =
-    new IO.Output(tmpDir, classOf[lib.output.SequenceFileOutputFormat[KOUT, VOUT]])
+  var defaultInput: IO.Input[KOUT,VOUT] = new IO.Input(tmpDir, classOf[lib.input.SequenceFileInputFormat[KOUT,VOUT]])
+  var inputs: Array[IO.Input[KOUT,VOUT]] = Array()
+  var output: IO.Output[KOUT,VOUT] = new IO.Output(tmpDir, classOf[lib.output.SequenceFileOutputFormat[KOUT,VOUT]])
 
 
   def cloneTypesafe(): thisType = clone().asInstanceOf[thisType]
@@ -63,19 +63,34 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
 
   /**Add a confModifier to the current task by returning a copy of this chain
       with the confModifier pushed onto the confModifier list */
-  def -->(confModifier: MapReduceTaskChain.ConfModifier): thisType = {
+  def -->(confModifier: ConfModifier): thisType = {
     val chain = cloneTypesafe
     chain.confModifiers = confModifier :: chain.confModifiers
     return chain
   }
 
+  /** Add a JobModifier to the current task by returning a copy of this chain
+      with the JobModifier pushed onto the jobModifiers list */
+  def -->(jobModifier: JobModifier) : thisType = {
+    val chain = cloneTypesafe;
+    chain.jobModifiers = jobModifier::chain.jobModifiers;
+    return chain;
+  }
 
   /**Adds an input source to the chain */
   def -->[K, V](in: IO.Input[K, V]): MapReduceTaskChain[KIN, VIN, K, V] = {
     val chain = new MapReduceTaskChain[KIN, VIN, K, V]()
     chain.prev = this
-    chain.nextInput = in
+    chain.inputs = Array(in)
     return chain
+  }
+
+  /** Adds multiple input sources to the chain */
+  def -->[K,V](inputs: Array[IO.Input[K,V]]): MapReduceTaskChain[KIN, VIN, K, V] = {
+    val chain = new MapReduceTaskChain[KIN, VIN, K, V]();
+    chain.prev = this;
+    chain.inputs = inputs;
+    return chain;
   }
 
   /**Adds an output sink to the chain */
@@ -94,15 +109,27 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
       // Off the bat, apply the modifications from all the ConfModifiers we have queued up at this node.
       confModifiers map ((mod: ConfModifier) => mod(conf))
 
-      val job = task initJob conf
+      val job = new Job(conf, task.name)
+      //job setJarByClass classOf[MapOnlyTask[_,_,_,_]]
+      task initJob conf
 
-      // Should never be null set to SequenceFile with a random temp dirname by default
-      job setInputFormatClass prev.nextInput.inFormatClass
+      // Apply the modifications from all the JobModifiers we have queued up at this node.
+      jobModifiers foreach ((mod: JobModifier) => mod(job))
+
       job setOutputFormatClass output.outFormatClass
-
-      lib.input.FileInputFormat.addInputPath(job, new Path(prev.nextInput.dirName))
       lib.output.FileOutputFormat.setOutputPath(job, new Path(output.dirName))
 
+      if (prev.inputs.isEmpty) {
+        job setInputFormatClass    prev.defaultInput.inFormatClass
+        System.err.println("Adding input path: " + prev.defaultInput.dirName)
+        lib.input.FileInputFormat.addInputPath(job, new Path(prev.defaultInput.dirName))
+      } else {
+        job setInputFormatClass   prev.inputs(0).inFormatClass
+        prev.inputs.foreach ((io) => {
+          System.err.println("Adding input path: " + io.dirName)
+          lib.input.FileInputFormat.addInputPath(job, new Path(io.dirName))
+        })
+      }
 
       job waitForCompletion true
       return true
@@ -139,4 +166,20 @@ object MapReduceTaskChain {
   }
 
   def init(): MapReduceTaskChain[None.type, None.type, None.type, None.type] = init(new Configuration)
+
+  class SetPartitioner(val partitionerClass: java.lang.Class[_ <: org.apache.hadoop.mapreduce.Partitioner[_, _]]) extends JobModifier {
+    def apply(job: Job) : Unit = { job.setPartitionerClass(partitionerClass); }
+  }
+  def Partitioner(partitionerClass: java.lang.Class[_ <: org.apache.hadoop.mapreduce.Partitioner[_, _]]) =
+    new SetPartitioner(partitionerClass);
+
+  class SetNumReduceTasks(val numReduceTasks: Int) extends JobModifier {
+    def apply(job: Job) : Unit = { job.setNumReduceTasks(numReduceTasks); }
+  }
+  def NumReduceTasks(numReduceTasks: Int) = new SetNumReduceTasks(numReduceTasks);
+}
+
+// Expose setX() methods on the Job object via JobModifiers
+trait JobModifier {
+  def apply(job: Job) : Unit;
 }
