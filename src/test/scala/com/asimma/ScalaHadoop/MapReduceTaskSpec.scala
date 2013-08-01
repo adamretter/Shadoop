@@ -11,15 +11,24 @@ class MapReduceTaskSpec extends Specification {
   type R = Reducer[Text, LongWritable, Text, LongWritable]
 
   object MapperTask extends M {
-    def doMap {
-      context.write(k, 1L)
+    mapWith {
+      (k,v) =>
+        List((k, 1L))
     }
+//    def doMap {
+//      context.write(k, 1L)
+//    }
   }
 
   object ReduceTask extends R {
-    def doReduce {
-      context.write(k, v.reduceLeft(_ + _))
+    reduceWith {
+      (k,v) =>
+        List((k, v.reduceLeft(_ + _)))
     }
+
+//    def doReduce {
+//      context.write(k, v.reduceLeft(_ + _))
+//    }
   }
 
   "MapReduceTask" should {
