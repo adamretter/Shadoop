@@ -1,10 +1,10 @@
 package com.asimma.ScalaHadoop
 
 import ImplicitConversion._
-import org.specs.SpecificationWithJUnit
+import org.specs2.mutable._
 import org.apache.hadoop.io._
 
-class MapReduceTaskSpec extends SpecificationWithJUnit {
+class MapReduceTaskSpec extends Specification {
 
   type M = Mapper[Text, LongWritable, Text, LongWritable]
 
@@ -23,11 +23,11 @@ class MapReduceTaskSpec extends SpecificationWithJUnit {
   }
 
   "MapReduceTask" should {
+    val task = MapReduceTask(MapperTask, ReduceTask, "Name")
     "apply" in {
-      val task = MapReduceTask(MapperTask, ReduceTask, "Name")
-      task.name mustBe "Name"
-      task.mapper.asInstanceOf[M] mustEq MapperTask
-      task.reducer.get.asInstanceOf[R] mustEq ReduceTask
+      task.name mustEqual "Name"
+      task.mapper.asInstanceOf[M] mustEqual MapperTask
+      task.reducer.get.asInstanceOf[R] mustEqual ReduceTask
     }
   }
 }
