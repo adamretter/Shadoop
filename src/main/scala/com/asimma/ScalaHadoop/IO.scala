@@ -65,11 +65,19 @@ object TextInput {
    IO.Text[K,V](folder).input
 	}
 }
+
 object TextOutput {
 	def apply[K,V](folder: String)(implicit mIn: Manifest[lib.input.TextInputFormat],
                                   mOut: Manifest[lib.output.TextOutputFormat[K, V]]) = {
    IO.Text[K,V](folder).output
 	}
+}
+
+object SeqFileInput {
+  def apply[K,V](folder: String)(implicit mIn: Manifest[lib.input.SequenceFileInputFormat[K,V]],
+                                 mOut: Manifest[lib.output.SequenceFileOutputFormat[K, V]]) = {
+    IO.SeqFile[K,V](folder).input
+  }
 }
 
 object SeqFileOutput {
