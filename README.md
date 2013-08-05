@@ -42,7 +42,7 @@ generic specializers of the class it extends.
 
 These mappers and reducers can be chained together with the --> operator 
 
-    object WordCount extends ScalaHadoopTool{ 
+    object WordCount extends ScalaHadoop{ 
       def run(args: Array[String]) : Int = {  
         TextInput[LongWritable, Text](args(0)) -->
 		MapReduceTask(mapper, reducer, "Main task") -->
@@ -55,7 +55,7 @@ These mappers and reducers can be chained together with the --> operator
 ### Multiple map/reduce
 Multiple map/reduce runs can be chained together
 
-    object WordsWithSameCount extends ScalaHadoopTool {
+    object WordsWithSameCount extends ScalaHadoop {
       def run(args: Array[String]) : Int = {
         IO.Text[LongWritable, Text](args(0)).input                    -->  
         MapReduceTask.MapReduceTask(TokenizerMap1, SumReducer)        -->
