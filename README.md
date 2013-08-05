@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/adamretter/ScalaHadoop.png?branch=master)](https://travis-ci.org/adamretter/ScalaHadoop)
 
-This fork of ScalaHadop is mostly just cherry-picked commits from the forks by [@hito-asa](http://github.com/hiti-asa/ScalaHadoop), [@ivmaykov](http://github.com/ivmaykov/ScalaHadoop) and [@oscarrenalis](@oscarrenalis). In addition there are a few extra features and a cleaned up Maven build.
+This fork of ScalaHadop is mostly just cherry-picked commits from the forks by [@hito-asa](http://github.com/hiti-asa/ScalaHadoop), [@ivmaykov](http://github.com/ivmaykov/ScalaHadoop) and [@oscarrenalis](https://github.com/oscarrenalias/ScalaHadoop), of the original work by [@bsdfish](https://github.com/bsdfish/ScalaHadoop). In addition there are a few extra features and a cleaned up Maven build.
 
 This code provides some syntactic sugar on top of Hadoop in order to make
 it more usable from Scala.  Take a look at src/main/scala/net/renalias/scoop/examples/WordCount.scala for more
