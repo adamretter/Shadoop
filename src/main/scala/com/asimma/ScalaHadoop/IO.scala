@@ -12,7 +12,6 @@ object IO {
   class Output[K, V](val dirName: String,
                      val outFormatClass: java.lang.Class[_ <: lib.output.FileOutputFormat[K, V]])
 
-
   /**This is a general class for inputs and outputs into the Map Reduce jobs.  Note that it's possible to
       write one type to a file and then have it be read as something else.  */
 

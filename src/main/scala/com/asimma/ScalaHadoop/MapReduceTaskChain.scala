@@ -109,14 +109,12 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
       // Off the bat, apply the modifications from all the ConfModifiers we have queued up at this node.
       confModifiers map ((mod: ConfModifier) => mod(conf))
 
-      val job = new Job(conf, task.name)
-      //job setJarByClass classOf[MapOnlyTask[_,_,_,_]]
-      task initJob conf
+      val job = task initJob conf
 
       // Apply the modifications from all the JobModifiers we have queued up at this node.
       jobModifiers foreach ((mod: JobModifier) => mod(job))
 
-      job setOutputFormatClass output.outFormatClass
+      job setOutputFormatClass(output.outFormatClass)
       lib.output.FileOutputFormat.setOutputPath(job, new Path(output.dirName))
 
       if (prev.inputs.isEmpty) {
