@@ -4,6 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+	<groupId>org.sonatype.oss</groupId>
+	<artifactId>oss-parent</artifactId>
+  	<version>7</version>
+  </parent>
+
+  <name>Scala Hadoop Library</name>
+  <description>A lightweight wrapper and DSL for using Hadoop from Scala</description>
+
   <groupId>com.asimma.ScalaHadoop</groupId>
   <artifactId>ScalaHadoop</artifactId>
   <version>1.0-SNAPSHOT</version>
@@ -15,6 +24,12 @@
           <distribution>repo</distribution>
       </license>
   </licenses>
+
+  <scm>
+	<connection>scm:git:https://github.com/adamretter/ScalaHadoop.git</connection>
+	<developerConnection>scm:git:https://git@github.com/adamretter/ScalaHadoop.git</developerConnection>
+    <url>https://github.com/adamretter/ScalaHadoop</url>
+  </scm>
 
   <properties>
     <scala.version>2.10.2</scala.version>
@@ -56,6 +71,21 @@
           <artifactId>maven-specs2-plugin</artifactId>
           <version>0.4.1</version>
         </plugin>
+		<plugin>
+		  <groupId>com.mycila.maven-license-plugin</groupId>
+		  <artifactId>maven-license-plugin</artifactId>
+		  <version>1.9.0</version>
+		</plugin>
+		<plugin>
+		  <groupId>org.apache.maven.plugins</groupId>
+		  <artifactId>maven-source-plugin</artifactId>
+		  <version>2.2.1</version>
+		</plugin>
+	  	<plugin>
+		  <groupId>org.apache.maven.plugins</groupId>
+		  <artifactId>maven-release-plugin</artifactId>
+		  <version>2.4.1</version>
+		</plugin>
       </plugins>
     </pluginManagement>
 
@@ -64,16 +94,23 @@
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
         <configuration>
-          <recompileMode>all</recompileMode>   <!-- NOTE: "incremental" compilation although faster may require passing to MAVEN_OPTS="-XX:MaxPermSize=128m" -->
-          <useZincServer>true</useZincServer>          <!-- NOTE: if you have Zinc server installed and running, you can get faster compilation by enabling this -->
+	  	  <recompileMode>all</recompileMode>	<!-- NOTE: "incremental" compilation although faster may require passing to MAVEN_OPTS="-XX:MaxPermSize=128m" -->
+          <useZincServer>true</useZincServer>	<!-- NOTE: if you have Zinc server installed and running, you can get faster compilation by enabling this -->
         </configuration>
         <executions>
           <execution>
             <goals>
-              <goal>compile</goal>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
+			  <goal>compile</goal>
+			  <goal>testCompile</goal>
+		    </goals>
+		  </execution>
+		  <execution>
+			<id>scala-doc-jar</id>
+			<phase>package</phase>
+			<goals>
+			  <goal>doc-jar</goal>
+			</goals>
+		  </execution>
         </executions>
       </plugin>
       <plugin>
@@ -97,8 +134,130 @@
           </dependency>
         </dependencies>
       </plugin>
+	  <plugin>
+		<groupId>com.mycila.maven-license-plugin</groupId>
+		<artifactId>maven-license-plugin</artifactId>
+		<inherited>true</inherited>
+		<configuration>
+		  <header>license-header.txt</header>
+		  <failIfMissing>true</failIfMissing>
+		  <strictCheck>true</strictCheck>
+		  <encoding>${project.build.sourceEncoding}</encoding>
+	      <excludes>
+			<exclude>README.md</exclude>
+			<exclude>LICENSE</exclude>
+			<exclude>license-header.txt</exclude>
+			<exclude>.gitignore</exclude>
+			<exclude>.travis.yml</exclude>
+		    <exclude>.idea/**</exclude>
+		  </excludes>
+		</configuration>
+		<executions>
+		  <execution>
+			<id>check-headers</id>
+			<phase>verify</phase>
+			<goals>
+			  <goal>check</goal>
+			</goals>
+		  </execution>
+		</executions>
+	  </plugin>
+	  <plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-source-plugin</artifactId>
+		<configuration>
+		  <archive>
+		    <manifest>
+			  <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+			  <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+			</manifest>
+			<manifestEntries>
+			  <Source-Repository>${project.scm.connection}</Source-Repository>
+			  <Description>${project.description}</Description>
+			  <Website>${project.url}</Website>
+			</manifestEntries>
+		  </archive>
+		</configuration>
+		<executions>
+		  <execution>
+			<id>attach-sources</id>
+			<phase>verify</phase>
+			<goals>
+			  <goal>jar</goal>
+			</goals>
+		  </execution>
+		</executions>
+	  </plugin>
+	  <plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-release-plugin</artifactId>
+		<configuration>
+		  <mavenExecutorId>forked-path</mavenExecutorId> <!-- avoid a bug with GPG plugin hanging http://jira.codehaus.org/browse/MGPG-9 -->
+		</configuration>
+	  </plugin>
     </plugins>
 
   </build>
+
+  <developers>
+    <developer>
+	  <name>Alex Sima</name>
+	  <roles>
+	  	<role>Originator</role>
+	  </roles>
+	  <url>https://github.com/bsdfish/ScalaHadoop</url>
+	</developer>
+	<developer>
+	  <name>ASAI Hitoshi</name>
+	  <roles>
+	  	<role>Contributor</role>
+	  </roles>
+	  <url>http://github.com/hiti-asa/ScalaHadoop</url>
+	</developer>
+    <developer>
+	  <name>Ilya Maykov</name>
+	  <roles>
+	    <role>Contributor</role>
+	  </roles>
+	  <url>http://github.com/ivmaykov/ScalaHadoop</url>
+	</developer>
+    <developer>
+	  <name>Oscar Renalias</name>
+	  <roles>
+		<role>Contributor</role>
+	  </roles>
+	  <url>https://github.com/oscarrenalias/ScalaHadoop</url>
+    </developer>
+  </developers>
+
+  <profiles>
+	<profile>
+	  <id>release-sign-artifacts</id>
+	  <activation>
+		<property>
+		  <!-- performRelease will be true when mvn:release-perform is executed -->
+		  <name>performRelease</name>
+		  <value>true</value>
+		</property>
+	  </activation>
+	  <build>
+	    <plugins>
+		  <plugin>
+		    <groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-gpg-plugin</artifactId>
+			<executions>
+			  <execution>
+			    <id>sign-artifacts</id>
+				<phase>verify</phase>
+				<goals>
+				  <goal>sign</goal>
+				</goals>
+			  </execution>
+			</executions>
+		  </plugin>
+		</plugins>
+		</build>
+	</profile>
+  </profiles>
 
 </project>
