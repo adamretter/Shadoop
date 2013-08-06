@@ -52,6 +52,14 @@ object IO {
       mIn.erasure.asInstanceOf[Class[lib.input.FileInputFormat[LongWritable, Text]]],
       mOut.erasure.asInstanceOf[Class[lib.output.FileOutputFormat[K, V]]])
 
+
+  def KeyValueText(dirName: String)(implicit mIn: Manifest[lib.input.KeyValueTextInputFormat],
+                                    mOut: Manifest[lib.output.TextOutputFormat[Text, Text]]) =
+    new IO[Text, Text, Text, Text](dirName,
+      mIn.erasure.asInstanceOf[Class[lib.input.FileInputFormat[Text, Text]]],
+      mOut.erasure.asInstanceOf[Class[lib.output.FileOutputFormat[Text, Text]]])
+
+
   def MultiSeqFile[K,V](dirNames : Array[String])
                        (implicit mIn:   Manifest[lib.input.SequenceFileInputFormat[K,V]],
                         mOut:  Manifest[lib.output.SequenceFileOutputFormat[K,V]]) =
@@ -68,23 +76,32 @@ object IO {
       mOut.erasure.asInstanceOf[Class[lib.output.FileOutputFormat[K,V]]]));
 }
 
-/**
- * syntactic sugar
- *
- * TODO: implement the same for IO.SeqFile
- */
 object TextInput {
 	def apply[K,V](folder: String)(implicit mIn: Manifest[lib.input.TextInputFormat],
                                   mOut: Manifest[lib.output.TextOutputFormat[K, V]]) = {
-   IO.Text[K,V](folder).input
+    IO.Text[K,V](folder).input
 	}
 }
 
 object TextOutput {
 	def apply[K,V](folder: String)(implicit mIn: Manifest[lib.input.TextInputFormat],
                                   mOut: Manifest[lib.output.TextOutputFormat[K, V]]) = {
-   IO.Text[K,V](folder).output
+    IO.Text[K,V](folder).output
 	}
+}
+
+object KeyValueTextInput {
+  def apply(folder: String)(implicit mIn: Manifest[lib.input.KeyValueTextInputFormat],
+                            mOut: Manifest[lib.output.TextOutputFormat[Text, Text]]) = {
+    IO.KeyValueText(folder).input
+  }
+}
+
+object KeyValueTextOutput {
+  def apply(folder: String)(implicit mIn: Manifest[lib.input.KeyValueTextInputFormat],
+                            mOut: Manifest[lib.output.TextOutputFormat[Text, Text]]) = {
+    IO.KeyValueText(folder).output
+  }
 }
 
 object SeqFileInput {
