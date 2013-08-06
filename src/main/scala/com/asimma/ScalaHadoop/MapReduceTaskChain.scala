@@ -116,10 +116,15 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
 
 
   def execute(): Boolean = {
-    if (prev != null)
+    if (prev != null) {
+      System.err.println("Looking to previous Task for exec...")
       prev.execute()
+    }
 
     if (task != null) {
+
+      System.err.println(s"Executing task '${task.name}'...")
+
       val conf = getConf
       // Off the bat, apply the modifications from all the ConfModifiers we have queued up at this node.
       confModifiers map ((mod: ConfModifier) => mod(conf))
@@ -130,17 +135,24 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
       jobModifiers foreach ((mod: JobModifier) => mod(job))
 
       job setOutputFormatClass(output.outFormatClass)
-      lib.output.FileOutputFormat.setOutputPath(job, new Path(output.dirName))
+
+      if (classOf[lib.output.FileOutputFormat[KOUT, VOUT]].isAssignableFrom(output.outFormatClass)) {
+        lib.output.FileOutputFormat.setOutputPath(job, new Path(output.dirName))
+      }
 
       if (prev.inputs.isEmpty) {
         job setInputFormatClass    prev.defaultInput.inFormatClass
-        System.err.println("Adding input path: " + prev.defaultInput.dirName)
-        lib.input.FileInputFormat.addInputPath(job, new Path(prev.defaultInput.dirName))
+        if (classOf[lib.input.FileInputFormat[KIN, VIN]].isAssignableFrom(prev.defaultInput.inFormatClass)) {
+          System.err.println("Adding input path: " + prev.defaultInput.dirName)
+          lib.input.FileInputFormat.addInputPath(job, new Path(prev.defaultInput.dirName))
+        }
       } else {
         job setInputFormatClass   prev.inputs(0).inFormatClass
         prev.inputs.foreach ((io) => {
-          System.err.println("Adding input path: " + io.dirName)
-          lib.input.FileInputFormat.addInputPath(job, new Path(io.dirName))
+          if (classOf[lib.input.FileInputFormat[KIN, VIN]].isAssignableFrom(prev.inputs(0).inFormatClass)) {
+            System.err.println("Adding input path: " + io.dirName)
+            lib.input.FileInputFormat.addInputPath(job, new Path(io.dirName))
+          }
         })
       }
 
