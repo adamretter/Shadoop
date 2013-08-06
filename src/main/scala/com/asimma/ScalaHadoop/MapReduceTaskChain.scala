@@ -184,6 +184,10 @@ object MapReduceTaskChain {
     MapReduceTaskChain.init --> in
   }
 
+  implicit def -->[K,V](in: Array[IO.Input[K,V]]) = {
+    MapReduceTaskChain.init --> in
+  }
+
 
   class SetPartitioner(val partitionerClass: java.lang.Class[_ <: org.apache.hadoop.mapreduce.Partitioner[_, _]]) extends JobModifier {
     def apply(job: Job) : Unit = { job.setPartitionerClass(partitionerClass); }
