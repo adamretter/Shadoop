@@ -39,6 +39,8 @@ case class MapReduceTask[KIN, VIN, KOUT, VOUT](mapper: Mapper[KIN, VIN, _, _],
     reducer match {
       case Some(r) =>
         job.setReducerClass(r.getClass.asInstanceOf[Class[HReducer[_, _, KOUT, VOUT]]])
+        job.setMapOutputKeyClass(mapper.kType)
+        job.setMapOutputValueClass(mapper.vType)
         job.setOutputKeyClass(r.kType)
         job.setOutputValueClass(r.vType)
       case None =>
