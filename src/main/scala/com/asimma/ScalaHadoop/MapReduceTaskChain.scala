@@ -18,6 +18,8 @@ package com.asimma.ScalaHadoop
 import org.apache.hadoop.mapreduce._
 import org.apache.hadoop.conf._
 import org.apache.hadoop.fs.Path
+import org.apache.commons.logging.LogFactory
+import java.io.StringWriter
 
 /**
 A class representing a bunch (one or more) of map and reduce operations, as well as
@@ -117,13 +119,13 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
 
   def execute(): Boolean = {
     if (prev != null) {
-      System.err.println("Looking to previous Task for exec...")
+      info("Looking to previous Task for exec...")
       prev.execute()
     }
 
     if (task != null) {
 
-      System.err.println(s"Executing task '${task.name}'...")
+      info(s"Executing task '${task.name}'...")
 
       val conf = getConf
       // Off the bat, apply the modifications from all the ConfModifiers we have queued up at this node.
@@ -143,18 +145,21 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
       if (prev.inputs.isEmpty) {
         job setInputFormatClass    prev.defaultInput.inFormatClass
         if (classOf[lib.input.FileInputFormat[KIN, VIN]].isAssignableFrom(prev.defaultInput.inFormatClass)) {
-          System.err.println("Adding input path: " + prev.defaultInput.dirName)
+          info("Adding input path: " + prev.defaultInput.dirName)
           lib.input.FileInputFormat.addInputPath(job, new Path(prev.defaultInput.dirName))
         }
       } else {
         job setInputFormatClass   prev.inputs(0).inFormatClass
         prev.inputs.foreach ((io) => {
           if (classOf[lib.input.FileInputFormat[KIN, VIN]].isAssignableFrom(prev.inputs(0).inFormatClass)) {
-            System.err.println("Adding input path: " + io.dirName)
+            info("Adding input path: " + io.dirName)
             lib.input.FileInputFormat.addInputPath(job, new Path(io.dirName))
           }
         })
       }
+
+      debug(debugJob(job))
+      debug(debugConfig(job.getConfiguration))
 
       job waitForCompletion true
       return true
@@ -162,6 +167,44 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
 
     return true
   }
+
+  private def debugConfig(config: Configuration, asJson: Boolean = false) = {
+    val writer = new StringWriter()
+    if(asJson) {
+      Configuration.dumpConfiguration(config, writer)
+    } else {
+      config.writeXml(writer)
+    }
+    "ConfigDebug = " + writer.toString
+  }
+
+  private def debugJob(job: Job) : String = {
+    import scala.reflect.runtime.{universe => ru}
+    import scala.reflect.runtime.universe._
+    import scala.reflect.ClassTag
+
+    def getFields[T: TypeTag] = typeOf[T].members.collect {
+      case t: TermSymbol if t.isVal || t.isVar =>
+        t
+    }.toList
+
+    def fieldsNameValue[T](instance: T)(implicit ctT : ClassTag[T], ttT: TypeTag[T]) : Seq[(String, String)]= {
+      val m = ru.runtimeMirror(job.getClass.getClassLoader)
+      val ref = m.reflect(instance)
+      getFields[T].map(field => {
+        val fieldMirror = ref.reflectField(field)
+        (field.fullName,  Option(fieldMirror.get).getOrElse("null").toString)
+      })
+    }
+
+    "Job Debug = " +
+      fieldsNameValue(job).map(kv => s"${kv._1}: ${kv._2}").mkString(System.getProperty("line.separator"))
+  }
+
+  private lazy val logger = LogFactory.getLog(this.getClass)
+  private def debug(message: => String) = log(logger.isDebugEnabled, logger.debug, message)
+  private def info(message: => String) = log(logger.isInfoEnabled, logger.info, message)
+  private def log(fc: => Boolean, fl: (String) => Unit, message: String) = if(fc) fl(message)
 
   def getConf: Configuration = if (conf == null) prev.getConf else conf
 }
