@@ -211,6 +211,13 @@
 
   <developers>
     <developer>
+    	  <name>Adam Retter</name>
+    	  <roles>
+    	  	<role>Developer</role>
+    	  </roles>
+    	  <url>https://github.com/adamretter/ScalaHadoop</url>
+    </developer>
+    <developer>
 	  <name>Alex Sima</name>
 	  <roles>
 	  	<role>Originator</role>
