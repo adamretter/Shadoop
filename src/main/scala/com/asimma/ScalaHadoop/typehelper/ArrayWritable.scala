@@ -29,12 +29,12 @@ class ArrayWritable[T <: Writable](val values: Seq[T])(implicit val ctT: ClassTa
   /**
    * A copy of the ArrayWritable with a value prepended.
    */
-  def +:(value: T) : ArrayWritable[T] = new ArrayWritable[T](value +: seq)
+  def +:(value: T) : ArrayWritable[T] = new ArrayWritable[T](value +: values)
 
   /**
    * A copy of the ArrayWritable with a value appended.
    */
-  def :+(value: T) : ArrayWritable[T] = new ArrayWritable[T](value :+ seq)
+  def :+(value: T) : ArrayWritable[T] = new ArrayWritable[T](values :+ value)
 }
 
 object ArrayWritable {
