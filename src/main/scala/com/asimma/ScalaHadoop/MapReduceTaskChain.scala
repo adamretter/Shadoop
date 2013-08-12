@@ -144,14 +144,16 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
 
       if (prev.inputs.isEmpty) {
         job setInputFormatClass    prev.defaultInput.inFormatClass
-        if (classOf[lib.input.FileInputFormat[KIN, VIN]].isAssignableFrom(prev.defaultInput.inFormatClass)) {
+        if (classOf[lib.input.FileInputFormat[KIN, VIN]].isAssignableFrom(prev.defaultInput.inFormatClass)
+          || classOf[PathInputFormat[KIN, VIN]].isAssignableFrom(prev.defaultInput.inFormatClass)) {
           info("Adding input path: " + prev.defaultInput.dirName)
           lib.input.FileInputFormat.addInputPath(job, new Path(prev.defaultInput.dirName))
         }
       } else {
         job setInputFormatClass   prev.inputs(0).inFormatClass
         prev.inputs.foreach ((io) => {
-          if (classOf[lib.input.FileInputFormat[KIN, VIN]].isAssignableFrom(prev.inputs(0).inFormatClass)) {
+          if (classOf[lib.input.FileInputFormat[KIN, VIN]].isAssignableFrom(prev.inputs(0).inFormatClass)
+            || classOf[PathInputFormat[KIN, VIN]].isAssignableFrom(prev.inputs(0).inFormatClass)) {
             info("Adding input path: " + io.dirName)
             lib.input.FileInputFormat.addInputPath(job, new Path(io.dirName))
           }

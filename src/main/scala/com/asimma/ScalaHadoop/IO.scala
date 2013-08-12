@@ -117,3 +117,10 @@ object SeqFileOutput {
     IO.SeqFile[K,V](folder).output
   }
 }
+
+/**
+ * Used to indicate an Input Format
+ * that will work with a 'file' Path
+ * but does not necessarily subclass FileInputFormat
+ */
+abstract class PathInputFormat[K, V] extends InputFormat[K, V]
