@@ -25,6 +25,16 @@ class ArrayWritable[T <: Writable](val values: Seq[T])(implicit val ctT: ClassTa
   override def toString = "[" + values.map(_.toString).reduceLeft(_ + ", " + _) + "]"
 
   def iterator = values.iterator
+
+  /**
+   * A copy of the ArrayWritable with a value prepended.
+   */
+  def +:(value: T) : ArrayWritable[T] = new ArrayWritable[T](value +: seq)
+
+  /**
+   * A copy of the ArrayWritable with a value appended.
+   */
+  def :+(value: T) : ArrayWritable[T] = new ArrayWritable[T](value :+ seq)
 }
 
 object ArrayWritable {
