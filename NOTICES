@@ -1,0 +1,8 @@
+This ScalaHadoop derivative is based on code by:
+
+    Alex Simma: https://github.com/bsdfish/ScalaHadoop
+    ASAI Hitoshi: http://github.com/hiti-asa/ScalaHadoop
+    Ilya Maykov: http://github.com/ivmaykov/ScalaHadoop
+    Oscar Renalias: https://github.com/oscarrenalias/ScalaHadoop
+
+All of which was released under the Apache License Version 2.0.
