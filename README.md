@@ -66,9 +66,9 @@ Multiple map/reduce runs may be chained together:
 ```scala
 object WordsWithSameCount extends ScalaHadoop {
   def run(args: Array[String]) : Int = {
-    TextInput[LongWritable, Text](args(0))          -->
-    MapReduceTask(tokenizerMap1, sumReducer)        -->
-    MapReduceTask(flipKeyValueMap, wordListReducer) -->
+    TextInput[LongWritable, Text](args(0)) -->
+    MapReduceTask(tokenizerMap1, sumReducer, "Sum") -->
+    MapReduceTask(flipKeyValueMap, wordListReducer, "Reduce") -->
     TextOutput[LongWritable, Text](args(1)) execute
 
     0 //result code
