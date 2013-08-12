@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/adamretter/ScalaHadoop.png?branch=master)](https://travis-ci.org/adamretter/ScalaHadoop)
 
-This fork of ScalaHadop is mostly just cherry-picked commits from the forks by [@hito-asa](http://github.com/hiti-asa/ScalaHadoop), [@ivmaykov](http://github.com/ivmaykov/ScalaHadoop) and [@oscarrenalis](https://github.com/oscarrenalias/ScalaHadoop), of the original work by [@bsdfish](https://github.com/bsdfish/ScalaHadoop). In addition there are a few extra features and a cleaned up Maven build.
+This fork of ScalaHadop is mostly just cherry-picked commits from the forks by [@hito-asa](https://github.com/hiti-asa/ScalaHadoop), [@ivmaykov](https://github.com/ivmaykov/ScalaHadoop) and [@oscarrenalis](https://github.com/oscarrenalias/ScalaHadoop), of the original work by [@bsdfish](https://github.com/bsdfish/ScalaHadoop). In addition there are a few extra features and a cleaned up Maven build.
 
 This code provides some syntactic sugar on top of Hadoop in order to make
 it more usable from Scala.  Take a look at src/main/scala/net/renalias/scoop/examples/WordCount.scala for more
@@ -66,7 +66,8 @@ Multiple map/reduce runs can be chained together
     }
 
 ## Contributors
-- **Alex Simma**: Developer of original version of ScalaHadoop.
-- **ASAI Hitoshi**: Cherr-picked - Code re-organisation and initial Maven build.
-- **Ilya Maykov**: Cherry-picked - Various fixes, and support for Multiple Input Paths https://github.com/ivmaykov/ScalaHadoop
-- **Oscar Renalias**: Cherry-picked - Scala Syntax improvements https://github.com/oscarrenalias/ScalaHadoop
+- **Alex Simma**: Developer of original version of ScalaHadoop. https://github.com/bsdfish/ScalaHadoop
+- **ASAI Hitoshi**: Cherry-picked - Code re-organisation and initial Maven build. https://github.com/hiti-asa/ScalaHadoop
+- **Ilya Maykov**: Cherry-picked - Various fixes, and support for Multiple Input Paths. https://github.com/ivmaykov/ScalaHadoop
+- **Oscar Renalias**: Cherry-picked - Scala Syntax improvements. https://github.com/oscarrenalias/ScalaHadoop
+
