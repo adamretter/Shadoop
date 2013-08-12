@@ -9,25 +9,31 @@ it more usable from Scala.  Take a look at src/main/scala/net/renalias/scoop/exa
 details.
 
 ## License
-Apache License, Version 2.0
+[Apache License, Version 2.0](http://opensource.org/licenses/Apache-2.0)
 
 ## Usage
 ### Basic Usage
-A basic mapper looks like
+A basic mapper looks like:
 
-    val mapper = new Mapper[LongWritable, Text, Text, LongWritable] {
-		mapWith { (k, v) =>
-				(v split " |\t").map(x => (new Text(x), new LongWritable(1L))).toList
-		}
-	}
+```scala
+val mapper = new Mapper[LongWritable, Text, Text, LongWritable] {
+    mapWith {
+        (k, v) =>
+            (v split " |\t").map(x => (new Text(x), new LongWritable(1L))).toList
+    }
+}
+```
 
-and a reducer
+and a reducer:
 
-    val reducer = new Reducer[Text, LongWritable, Text, LongWritable] {
-		reduceWith { (k, v) =>
-				List((k, (0L /: v)((total, next) => total + next)))
-		}
-	}
+```scala
+val reducer = new Reducer[Text, LongWritable, Text, LongWritable] {
+    reduceWith {
+        (k, v) =>
+            List((k, (0L /: v)((total, next) => total + next)))
+    }
+}
+```
 
 The key difference here between standard mappers and reducers is that the map and reduce parts are written as side-effect
 free functions that accept a key and a value, and return an iterable; code behind the scenes will take care of
@@ -40,30 +46,35 @@ Note that implicit conversion is used to convert between LongWritable and longs,
 and Strings.  The types of the input and output parameters only need to be stated as the
 generic specializers of the class it extends.
 
-These mappers and reducers can be chained together with the --> operator 
+These mappers and reducers can be chained together with the --> operator:
 
-    object WordCount extends ScalaHadoop{ 
-      def run(args: Array[String]) : Int = {  
-        TextInput[LongWritable, Text](args(0)) -->
-		MapReduceTask(mapper, reducer, "Main task") -->
-		TextOutput[Text, LongWritable](args(1)) execute
+```scala
+object WordCount extends ScalaHadoop {
+  def run(args: Array[String]) : Int = {
+    TextInput[LongWritable, Text](args(0)) -->
+    MapReduceTask(mapper, reducer, "Main task") -->
+    TextOutput[Text, LongWritable](args(1)) execute
 
-        return 0;
-      }
-    }
+    0 //result code
+  }
+}
+```
 
 ### Multiple map/reduce
-Multiple map/reduce runs can be chained together
+Multiple map/reduce runs may be chained together:
 
-    object WordsWithSameCount extends ScalaHadoop {
-      def run(args: Array[String]) : Int = {
-        IO.Text[LongWritable, Text](args(0)).input                    -->  
-        MapReduceTask.MapReduceTask(TokenizerMap1, SumReducer)        -->
-        MapReduceTask.MapReduceTask(FlipKeyValueMap, WordListReducer) -->
-        IO.Text[LongWritable, Text](args(1)).output) execute;
-        return 0;
-      }
-    }
+```scala
+object WordsWithSameCount extends ScalaHadoop {
+  def run(args: Array[String]) : Int = {
+    TextInput[LongWritable, Text](args(0))          -->
+    MapReduceTask(tokenizerMap1, sumReducer)        -->
+    MapReduceTask(flipKeyValueMap, wordListReducer) -->
+    TextOutput[LongWritable, Text](args(1)) execute
+
+    0 //result code
+  }
+}
+```
 
 ## Contributors
 - **Alex Simma**: Developer of original version of ScalaHadoop. https://github.com/bsdfish/ScalaHadoop
