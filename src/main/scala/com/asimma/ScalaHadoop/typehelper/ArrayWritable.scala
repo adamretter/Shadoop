@@ -15,33 +15,38 @@
  */
 package com.asimma.ScalaHadoop.typehelper
 
-import org.apache.hadoop.io.{ArrayWritable => HArrayWritable, Writable}
+import org.apache.hadoop.io.{ArrayWritable => HArrayWritable, Writable, Text, LongWritable}
 import scala.reflect.ClassTag
 
-class ArrayWritable[T <: Writable](val values: Seq[T])(implicit val ctT: ClassTag[T])
-  extends HArrayWritable(ctT.runtimeClass.asInstanceOf[Class[T]], values.toArray)
-  with collection.mutable.Iterable[T] {
+trait ArrayWritableType[T <: Writable] {
+  type ConcreteArrayWritable <: ArrayWritable[T]
+}
 
-  override def toString = "[" + values.map(_.toString).reduceLeft(_ + ", " + _) + "]"
+trait AbstractArrayWritableObject[T <: Writable] extends ArrayWritableType[T] {
+  implicit def ArrayWritableUnbox(a: ConcreteArrayWritable) : Seq[T] = a.toSeq
+  implicit def ArrayWritableBox(s: Seq[T]) = apply(s)
+  def apply(values: Seq[T])
+}
+
+abstract class ArrayWritable[T <: Writable] (val values: Seq[T])(implicit val ctT: ClassTag[T])
+  extends HArrayWritable(ctT.runtimeClass.asInstanceOf[Class[T]], values.toArray)
+  with ArrayWritableType[T] with collection.mutable.Iterable[T] {
+
+  //type ConcreteArrayWritable <: ArrayWritable[T]
+
+  protected def make(values: Seq[T]) : ConcreteArrayWritable
 
   def iterator = values.iterator
 
   /**
    * A copy of the ArrayWritable with a value prepended.
    */
-  def +:(value: T) : ArrayWritable[T] = new ArrayWritable[T](value +: values)
+  def +:(value: T) : ConcreteArrayWritable = make(value +: values)
 
   /**
    * A copy of the ArrayWritable with a value appended.
    */
-  def :+(value: T) : ArrayWritable[T] = new ArrayWritable[T](values :+ value)
-}
+  def :+(value: T) : ConcreteArrayWritable  = make(value +: values)
 
-object ArrayWritable {
-
-  def apply[T <: Writable](values: Seq[T])(implicit ctT: ClassTag[T]) = new ArrayWritable[T](values)
-
-  implicit def ArrayWritableUnbox[T <: Writable](a: ArrayWritable[T]) : Seq[T] = a.toSeq
-
-  implicit def ArrayWritableBox[T <: Writable](s: Seq[T])(implicit ctT: ClassTag[T]) = apply(s)
+  override def toString = "[" + values.map(_.toString).reduceLeft(_ + ", " + _) + "]"
 }
