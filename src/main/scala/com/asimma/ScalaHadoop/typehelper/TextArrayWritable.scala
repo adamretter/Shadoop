@@ -17,7 +17,7 @@ package com.asimma.ScalaHadoop.typehelper
 
 import org.apache.hadoop.io.Text
 
-class TextArrayWritable(override val values: Seq[Text]) extends ArrayWritable[Text](values) with ArrayWritableType[Text] {
+class TextArrayWritable(values: Seq[Text]) extends ArrayWritable[Text](values) with ArrayWritableType[Text] {
   type ConcreteArrayWritable = TextArrayWritable
 
   def this() = this(Seq.empty[Text])
@@ -29,4 +29,5 @@ object TextArrayWritable extends AbstractArrayWritableObject[Text] {
   type ConcreteArrayWritable = TextArrayWritable
 
   override def apply(values: Seq[Text]) = new TextArrayWritable(values)
+  override def apply(values: Array[Text]) = new TextArrayWritable(values)
 }

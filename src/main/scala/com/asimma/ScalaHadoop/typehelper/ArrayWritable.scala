@@ -22,21 +22,15 @@ trait ArrayWritableType[T <: Writable] {
   type ConcreteArrayWritable <: ArrayWritable[T]
 }
 
-trait AbstractArrayWritableObject[T <: Writable] extends ArrayWritableType[T] {
-  implicit def ArrayWritableUnbox(a: ConcreteArrayWritable) : Seq[T] = a.toSeq
-  implicit def ArrayWritableBox(s: Seq[T]) = apply(s)
-  def apply(values: Seq[T])
-}
-
-abstract class ArrayWritable[T <: Writable] (val values: Seq[T])(implicit val ctT: ClassTag[T])
+abstract class ArrayWritable[T <: Writable](values: Array[T])(implicit val ctT: ClassTag[T])
   extends HArrayWritable(ctT.runtimeClass.asInstanceOf[Class[T]], values.toArray)
   with ArrayWritableType[T] with collection.mutable.Iterable[T] {
 
-  //type ConcreteArrayWritable <: ArrayWritable[T]
+  def this(values: Seq[T])(implicit ctT: ClassTag[T]) = this(values.toArray)(ctT)
 
   protected def make(values: Seq[T]) : ConcreteArrayWritable
 
-  def iterator = values.iterator
+  def iterator = this.toArray[T].iterator
 
   /**
    * A copy of the ArrayWritable with a value prepended.
@@ -48,5 +42,12 @@ abstract class ArrayWritable[T <: Writable] (val values: Seq[T])(implicit val ct
    */
   def :+(value: T) : ConcreteArrayWritable  = make(value +: values)
 
-  override def toString = "[" + values.map(_.toString).foldLeft("")(_ + ", " + _) + "]"
+  override def toString: String = s"[${toStrings.foldLeft("")(_ + ", " + _)}]"
+}
+
+trait AbstractArrayWritableObject[T <: Writable] extends ArrayWritableType[T] {
+  implicit def ArrayWritableUnbox(a: ConcreteArrayWritable) : Seq[T] = a.toSeq
+  implicit def ArrayWritableBox(s: Seq[T]) = apply(s)
+  def apply(values: Seq[T])
+  def apply(values: Array[T])
 }

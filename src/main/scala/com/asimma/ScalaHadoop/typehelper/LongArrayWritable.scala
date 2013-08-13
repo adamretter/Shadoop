@@ -17,7 +17,7 @@ package com.asimma.ScalaHadoop.typehelper
 
 import org.apache.hadoop.io.LongWritable
 
-class LongArrayWritable(override val values: Seq[LongWritable]) extends ArrayWritable[LongWritable](values) with ArrayWritableType[LongWritable] {
+class LongArrayWritable(values: Seq[LongWritable]) extends ArrayWritable[LongWritable](values) with ArrayWritableType[LongWritable] {
   type ConcreteArrayWritable = LongArrayWritable
 
   def this() = this(Seq.empty[LongWritable])
@@ -29,4 +29,5 @@ object LongArrayWritable extends AbstractArrayWritableObject[LongWritable] {
   type ConcreteArrayWritable = LongArrayWritable
 
   override def apply(values: Seq[LongWritable]) = new LongArrayWritable(values)
+  override def apply(values: Array[LongWritable]) = new LongArrayWritable(values)
 }
