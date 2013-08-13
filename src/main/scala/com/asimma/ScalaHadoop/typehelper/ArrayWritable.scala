@@ -48,5 +48,5 @@ abstract class ArrayWritable[T <: Writable] (val values: Seq[T])(implicit val ct
    */
   def :+(value: T) : ConcreteArrayWritable  = make(value +: values)
 
-  override def toString = "[" + values.map(_.toString).reduceLeft(_ + ", " + _) + "]"
+  override def toString = "[" + values.map(_.toString).foldLeft("")(_ + ", " + _) + "]"
 }
