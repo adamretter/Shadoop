@@ -24,7 +24,7 @@ val mapper = new Mapper[LongWritable, Text, Text, LongWritable] {
 }
 ```
 
-and a reducer:
+a reducer looks like this:
 
 ```scala
 val reducer = new Reducer[Text, LongWritable, Text, LongWritable] {
@@ -34,6 +34,15 @@ val reducer = new Reducer[Text, LongWritable, Text, LongWritable] {
     }
 }
 ```
+
+and, the pipeline to bind them together may look like this:
+
+```scala
+TextInput[LongWritable, Text]("/tmp/input.txt") -->
+MapReduceTask(mapper, reducer, "Word Count")    -->
+TextOutput[Text, LongWritable]("/tmp/output")   execute
+```
+
 
 The key difference here between standard mappers and reducers is that the map and reduce parts are written as side-effect
 free functions that accept a key and a value, and return an iterable; code behind the scenes will take care of
