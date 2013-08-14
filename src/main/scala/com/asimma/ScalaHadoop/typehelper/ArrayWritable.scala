@@ -42,7 +42,9 @@ abstract class ArrayWritable[T <: Writable](values: Array[T])(implicit val ctT: 
    */
   def :+(value: T) : ConcreteArrayWritable  = make(value +: values)
 
-  override def toString: String = s"[${toStrings.foldLeft("")(_ + ", " + _)}]"
+  override def toString: String = {
+    s"[${this.toStrings.mkString(",")}]"
+  }
 }
 
 trait AbstractArrayWritableObject[T <: Writable] extends ArrayWritableType[T] {
