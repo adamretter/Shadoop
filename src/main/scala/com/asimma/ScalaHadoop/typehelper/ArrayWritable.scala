@@ -30,7 +30,7 @@ abstract class ArrayWritable[T <: Writable](values: Array[T])(implicit val ctT: 
 
   protected def make(values: Seq[T]) : ConcreteArrayWritable
 
-  def iterator = this.toArray[T].iterator
+  def iterator = get().asInstanceOf[Array[T]].iterator
 
   /**
    * A copy of the ArrayWritable with a value prepended.
