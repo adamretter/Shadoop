@@ -50,6 +50,6 @@ abstract class ArrayWritable[T <: Writable](values: Array[T])(implicit val ctT: 
 trait AbstractArrayWritableObject[T <: Writable] extends ArrayWritableType[T] {
   implicit def ArrayWritableUnbox(a: ConcreteArrayWritable) : Seq[T] = a.toSeq
   implicit def ArrayWritableBox(s: Seq[T]) = apply(s)
-  def apply(values: Seq[T])
-  def apply(values: Array[T])
+  def apply(values: Seq[T]) : ConcreteArrayWritable
+  def apply(values: Array[T]) : ConcreteArrayWritable
 }

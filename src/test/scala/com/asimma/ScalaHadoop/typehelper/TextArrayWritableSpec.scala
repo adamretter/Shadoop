@@ -7,6 +7,7 @@ class TextArrayWritableSpec extends Specification {
 
 
   "TextArrayWritable" should {
+
       "read same data as was written" in {
 
         val data = for(i <- 1 to 10) yield new Text(s"Thing $i")
@@ -15,6 +16,14 @@ class TextArrayWritableSpec extends Specification {
 
         array must containTheSameElementsAs(data)
       }
+
+    "apply as object" in {
+      val data = for(i <- 1 to 10) yield new Text(s"Thing $i")
+
+      val array = TextArrayWritable(data.toSeq)
+
+      array.getClass must beEqualTo(classOf[TextArrayWritable])
+    }
   }
 
 }
