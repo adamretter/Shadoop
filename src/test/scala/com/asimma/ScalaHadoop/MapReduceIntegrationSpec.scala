@@ -28,55 +28,46 @@ class MapReduceIntegrationSpec extends Specification {
   sequential
 
 
-  "ScalaHadoop MapRecuce" should {
+  "ScalaHadoop MapReduce" should {
 
     "Pipe mapper output to reducer input" in {
-
-      val outputPath = new File(new File(getClass().getResource("/").toURI), "mapReduceTest-output/pipe")
-      outputPath.deleteOnExit() //cleanup after ourselves
-      val inputPath = new File(getClass().getResource("/pipe-input.txt").toURI)
-
-      val result = PipeTextMapReduceController.run(Array(inputPath.getAbsolutePath, outputPath.getAbsolutePath))
-
-      val actualOutput = Source.fromFile(new File(outputPath, "/part-r-00000")).mkString
-
-      val expectedOutputPath = new File(getClass().getResource("/pipe-output.txt").toURI).getAbsolutePath
-      val expectedOutput = Source.fromFile(expectedOutputPath).mkString
-
-      actualOutput mustEqual expectedOutput
+      testController(
+        controller = PipeTextMapReduceController,
+        inputTextFile = "pipe-input.txt",
+        expectedOutputTextFile = "pipe-output.txt"
+      )
     }
-
 
     "Chain different types reducer and mapper" in {
-      val outputPath = new File(new File(getClass().getResource("/").toURI), "mapReduceTest-output/chain")
-      outputPath.deleteOnExit() //cleanup after ourselves
-      val inputPath = new File(getClass().getResource("/chain-input.txt").toURI)
-
-      val result = ChainDifferentTypesMapReduceController.run(Array(inputPath.getAbsolutePath, outputPath.getAbsolutePath))
-
-      val actualOutput = Source.fromFile(new File(outputPath, "/part-r-00000")).mkString
-
-      val expectedOutputPath = new File(getClass().getResource("/chain-output.txt").toURI).getAbsolutePath
-      val expectedOutput = Source.fromFile(expectedOutputPath).mkString
-
-      actualOutput mustEqual expectedOutput
+      testController(
+        controller = ChainDifferentTypesMapReduceController,
+        inputTextFile = "chain-input.txt",
+        expectedOutputTextFile = "chain-output.txt"
+      )
     }
-
 
     "Chain different types through default reducer and mapper" in {
-      val outputPath = new File(new File(getClass().getResource("/").toURI), "mapReduceTest-output/chain-defaults")
-      outputPath.deleteOnExit() //cleanup after ourselves
-      val inputPath = new File(getClass().getResource("/chain-input.txt").toURI)
-
-      val result = ChainDifferentTypesThroughDefaultsMapReduceController.run(Array(inputPath.getAbsolutePath, outputPath.getAbsolutePath))
-
-      val actualOutput = Source.fromFile(new File(outputPath, "/part-r-00000")).mkString
-
-      val expectedOutputPath = new File(getClass().getResource("/chain-output.txt").toURI).getAbsolutePath
-      val expectedOutput = Source.fromFile(expectedOutputPath).mkString
-
-      actualOutput mustEqual expectedOutput
+      testController(
+        controller = ChainDifferentTypesThroughDefaultsMapReduceController,
+        inputTextFile = "chain-input.txt",
+        expectedOutputTextFile = "chain-output.txt"
+      )
     }
+  }
+
+  def testController(inputTextFile: String, expectedOutputTextFile: String, controller: ScalaHadoop) = {
+    val outputPath = new File(new File(getClass().getResource("/").toURI), s"mapReduceTest-output/${controller.getClass.getName}")
+    outputPath.deleteOnExit() //cleanup after ourselves
+    val inputPath = new File(getClass().getResource(s"/$inputTextFile").toURI)
+
+    val result = controller.run(Array(inputPath.getAbsolutePath, outputPath.getAbsolutePath))
+
+    val actualOutput = Source.fromFile(new File(outputPath, "/part-r-00000")).mkString
+
+    val expectedOutputPath = new File(getClass().getResource(s"/$expectedOutputTextFile").toURI).getAbsolutePath
+    val expectedOutput = Source.fromFile(expectedOutputPath).mkString
+
+    actualOutput mustEqual expectedOutput
   }
 }
 
