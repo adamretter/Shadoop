@@ -25,6 +25,9 @@ import org.specs2.specification.{Step, Fragments}
 
 class MapReduceIntegrationSpec extends Specification {
 
+  sequential
+
+
   "ScalaHadoop MapRecuce" should {
 
     "Pipe mapper output to reducer input" in {
@@ -43,12 +46,13 @@ class MapReduceIntegrationSpec extends Specification {
       actualOutput mustEqual expectedOutput
     }
 
-    "Chain types through default reducer and mapper" in {
+
+    "Chain different types reducer and mapper" in {
       val outputPath = new File(new File(getClass().getResource("/").toURI), "mapReduceTest-output/chain")
       outputPath.deleteOnExit() //cleanup after ourselves
       val inputPath = new File(getClass().getResource("/chain-input.txt").toURI)
 
-      val result = ChainTypesThroughDefaultsMapReduceController.run(Array(inputPath.getAbsolutePath, outputPath.getAbsolutePath))
+      val result = ChainDifferentTypesMapReduceController.run(Array(inputPath.getAbsolutePath, outputPath.getAbsolutePath))
 
       val actualOutput = Source.fromFile(new File(outputPath, "/part-r-00000")).mkString
 
@@ -57,6 +61,56 @@ class MapReduceIntegrationSpec extends Specification {
 
       actualOutput mustEqual expectedOutput
     }
+
+
+    "Chain different types through default reducer and mapper" in {
+      val outputPath = new File(new File(getClass().getResource("/").toURI), "mapReduceTest-output/chain-defaults")
+      outputPath.deleteOnExit() //cleanup after ourselves
+      val inputPath = new File(getClass().getResource("/chain-input.txt").toURI)
+
+      val result = ChainDifferentTypesThroughDefaultsMapReduceController.run(Array(inputPath.getAbsolutePath, outputPath.getAbsolutePath))
+
+      val actualOutput = Source.fromFile(new File(outputPath, "/part-r-00000")).mkString
+
+      val expectedOutputPath = new File(getClass().getResource("/chain-output.txt").toURI).getAbsolutePath
+      val expectedOutput = Source.fromFile(expectedOutputPath).mkString
+
+      actualOutput mustEqual expectedOutput
+    }
+  }
+}
+
+class ToArrayMapper extends Mapper[LongWritable, Text, Text, TextArrayWritable] {
+  mapWith {
+    (k, v) =>
+      List(
+        (new Text("TEST"), TextArrayWritable(List(v)))
+      )
+  }
+}
+
+class FromArrayReducer extends Reducer[Text, TextArrayWritable, Text, Text] {
+  reduceWith {
+    (k, vs) =>
+      for(v <- vs) yield (k, new Text(v.mkString(",")))
+  }
+}
+
+/**
+ * If we have the generic mapper and reducer:
+ *  Mapper[K1, V1, K2, V2]
+ *  Reducer[K2, V2, K3, V3]
+ *
+ * We can write:
+ *  MapReduceTask(mapper, reducer, "task name")
+ */
+object ChainDifferentTypesMapReduceController extends ScalaHadoop {
+  def run(args: Array[String]): Int = {
+    TextInput[Text, TextArrayWritable](args(0)) -->
+      MapReduceTask(new ToArrayMapper(), new FromArrayReducer(), "ChainDifferentTypesMapReduceTest") -->
+        TextOutput[Text, Text](args(1)) execute
+
+    0
   }
 }
 
@@ -74,30 +128,14 @@ class MapReduceIntegrationSpec extends Specification {
  *
  * The default reducer in the first MapReduceTask
  * and default mapper in the second MapReduceTask must
- * correctly pass the Types of K and V through the chain
+ * correctly pass the Types of Kn and Vn through the chain
  */
-object ChainTypesThroughDefaultsMapReduceController extends ScalaHadoop {
-
-  val mapper = new Mapper[LongWritable, Text, Text, TextArrayWritable] {
-    mapWith {
-      (k, v) =>
-        List(
-          (new Text("TEST"), TextArrayWritable(List(v)))
-        )
-    }
-  }
-
-  val reducer = new Reducer[Text, TextArrayWritable, Text, Text] {
-    reduceWith {
-      (k, vs) =>
-        for(v <- vs) yield (k, new Text(v.mkString(",")))
-    }
-  }
+object ChainDifferentTypesThroughDefaultsMapReduceController extends ScalaHadoop {
 
   def run(args: Array[String]): Int = {
     TextInput[Text, TextArrayWritable](args(0)) -->
-      MapReduceTask(mapper, "ChainTypesThroughDefaultsMapTest") -->
-        MapReduceTask(reducer, "ChainTypesThroughDefaultsReduceTest") -->
+      MapReduceTask(new ToArrayMapper(), "ChainTypesThroughDefaultsMapTest") -->
+        MapReduceTask(new FromArrayReducer(), "ChainTypesThroughDefaultsReduceTest") -->
           TextOutput[Text, Text](args(1)) execute
 
     0
@@ -128,7 +166,9 @@ object PipeTextMapReduceController extends ScalaHadoop {
   def run(args: Array[String]): Int = {
     TextInput[Text, TextArrayWritable](args(0)) -->
       MapReduceTask(mapper, reducer, "PipeMapReduceTest") -->
-      TextOutput[Text, TextArrayWritable](args(1)) execute
+      //MapReduceTask(mapper, "PipeMapTest") -->
+      //MapReduceTask(reducer, "PipeReduceTest") -->
+        TextOutput[Text, TextArrayWritable](args(1)) execute
 
     0
   }
