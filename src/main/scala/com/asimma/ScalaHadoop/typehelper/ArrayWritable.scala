@@ -40,7 +40,7 @@ abstract class ArrayWritable[T <: Writable](values: Array[T])(implicit val ctT: 
   /**
    * A copy of the ArrayWritable with a value appended.
    */
-  def :+(value: T) : ConcreteArrayWritable  = make(value +: values)
+  def :+(value: T) : ConcreteArrayWritable  = make(values :+ value)
 
   override def toString: String = {
     s"[${this.toStrings.mkString(",")}]"

@@ -26,4 +26,30 @@ class TextArrayWritableSpec extends Specification {
     }
   }
 
+  ":+" should {
+    "append a value" in {
+
+      val data = List(new Text("item1"), new Text("item2"))
+      val arrayWritable = new TextArrayWritable(data)
+
+      val extra = new Text("item3")
+      val result = arrayWritable :+ extra
+
+      result.toList mustEqual (data :+ extra)
+    }
+  }
+
+  "+:" should {
+    "prepend a value" in {
+
+      val data = List(new Text("item1"), new Text("item2"))
+      val arrayWritable = new TextArrayWritable(data)
+
+      val extra = new Text("item3")
+      val result = extra +: arrayWritable
+
+      result.toList mustEqual (extra +: data)
+    }
+  }
+
 }
