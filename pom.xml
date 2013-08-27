@@ -156,10 +156,12 @@
 	      <excludes>
 			<exclude>README.md</exclude>
 			<exclude>LICENSE</exclude>
+            <exclude>NOTICES</exclude>
 			<exclude>license-header.txt</exclude>
 			<exclude>.gitignore</exclude>
 			<exclude>.travis.yml</exclude>
 		    <exclude>.idea/**</exclude>
+            <exclude>src/test/resources/**</exclude>
 		  </excludes>
 		</configuration>
 		<executions>
