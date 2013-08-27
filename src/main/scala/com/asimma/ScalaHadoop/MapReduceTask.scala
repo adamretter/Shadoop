@@ -53,6 +53,8 @@ case class MapReduceTask[KIN, VIN, KOUT, VOUT](mapper: Option[Mapper[KIN, VIN, _
             job.setMapOutputKeyClass(m.kType)
             job.setMapOutputValueClass(m.vType)
           case None =>
+            job.setMapOutputKeyClass(r.kinType)
+            job.setMapOutputValueClass(r.vinType)
         }
 
       case None if(!mapper.isEmpty) =>

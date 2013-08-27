@@ -35,14 +35,23 @@ object WordCount extends ScalaHadoop {
 	// TODO: could we use an implicit conversion to convert from Tuple2 to List[Tuple2] with one item only?
 	val reducer = new Reducer[Text, LongWritable, Text, LongWritable] {
 		reduceWith { (k,v) =>
-				 List((k, (0L /: v) ((total, next) => total+next)))
+
+      //System.err.println(s"REDUCER=($k, $v)")
+
+				 List(
+           (
+             k,
+             (0L /: v) ((total, next) => total+next)
+           )
+
+         )
 		}
 	}
 
   def run(args: Array[String]) : Int = {
-		TextInput[LongWritable, Text](args(0)) -->
-		MapReduceTask(mapper, reducer, "Main task") -->
-		TextOutput[Text, LongWritable](args(1)) execute
+		TextInput[LongWritable, Text]("file:///tmp/wordcount-input") -->
+		MapReduceTask(mapper, reducer, reducer, "Main task") -->
+		TextOutput[Text, LongWritable]("file:///tmp/scala") execute
 
     return 0;
   }
