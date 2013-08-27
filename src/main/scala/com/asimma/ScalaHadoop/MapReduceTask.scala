@@ -74,11 +74,11 @@ object MapReduceTask {
     apply(Option(mapper), None, None, name)
   }
 
-  def apply[KIN, VIN, KOUT, VOUT](
-   mapper: Mapper[KIN, VIN, KOUT, VOUT],
-   combiner: Reducer[_, _, _, _],
+  def apply[KIN, VIN, KOUT, VOUT, KTMP, VTMP](
+   mapper: Mapper[KIN, VIN, KTMP, VTMP],
+   reducer: Reducer[KTMP, VTMP, KOUT, VOUT],
    name: String): MapReduceTask[KIN, VIN, KOUT, VOUT] = {
-    apply(Option(mapper), Option(combiner), None, name)
+    apply[KIN, VIN, KOUT, VOUT](Option(mapper), None, Option(reducer), name)
   }
 
   def apply[KIN, VIN, KOUT, VOUT, KTMP, VTMP](
