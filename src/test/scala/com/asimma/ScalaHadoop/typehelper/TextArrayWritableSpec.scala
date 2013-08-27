@@ -67,4 +67,35 @@ class TextArrayWritableSpec extends Specification {
     }
   }
 
+  "java.lang.Iterable of TextArrayWritable" should {
+    "be implicitly convertable toList" in {
+
+      val taw1 = TextArrayWritable(List(new Text("t1.1"), new Text("t1.2")))
+      val taw2 = TextArrayWritable(List(new Text("t2.1"), new Text("t2.2.")))
+      val taw3 = TextArrayWritable(List(new Text("t3.1"), new Text("t3.2.")))
+
+      val iterable = new java.lang.Iterable[TextArrayWritable] {
+        val anIterator = new java.util.Iterator[TextArrayWritable] {
+          val data = Array(taw1, taw2, taw3)
+          var offset = 0
+
+          def hasNext = offset < data.length
+
+          def next() = {
+            val result = data(offset)
+            offset = offset + 1
+            result
+          }
+
+          def remove() {}
+        }
+        def iterator() = anIterator
+      }
+
+      import scala.collection.JavaConversions._
+
+      iterable.toList mustEqual List(taw1, taw2, taw3)
+    }
+  }
+
 }
