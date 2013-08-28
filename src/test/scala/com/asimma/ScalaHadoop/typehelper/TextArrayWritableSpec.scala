@@ -68,7 +68,7 @@ class TextArrayWritableSpec extends Specification {
   }
 
   "java.lang.Iterable of TextArrayWritable" should {
-    "be implicitly convertable toList" in {
+    "be implicitly convertable to Scala List" in {
 
       val taw1 = TextArrayWritable(List(new Text("t1.1"), new Text("t1.2")))
       val taw2 = TextArrayWritable(List(new Text("t2.1"), new Text("t2.2.")))
