@@ -164,7 +164,7 @@ class IdentityReducer extends Reducer[Text, TextArrayWritable, Text, TextArrayWr
 object PipeMapMutableReduceController extends ScalaHadoop {
   def run(args: Array[String]): Int = {
     TextInput[Text, TextArrayWritable](args(0)) -->
-      MapReduceTask(new FirstValueIsKeyMapper(), new IdentityReducer(), "PipeMapReduceTest") -->
+      MapReduceTask(new FirstValueIsKeyMapper(), new IdentityReducer(), "PipeMapMutableReduceTest") -->
       TextOutput[Text, TextArrayWritable](args(1)) execute
 
     0
@@ -181,7 +181,7 @@ object PipeMapImmutableReduceController extends ScalaHadoop {
 
   def run(args: Array[String]): Int = {
     TextInput[Text, TextArrayWritable](args(0)) -->
-      MapReduceTask(new FirstValueIsKeyMapper(), new IdentityReducer(), "PipeImmutableMapReduceTest") -->
+      MapReduceTask(new FirstValueIsKeyMapper(), new IdentityReducer(), "PipeMapImmutableReduceTest") -->
         immutableDeserializationConfModifier -->
         TextOutput[Text, TextArrayWritable](args(1)) execute
 
