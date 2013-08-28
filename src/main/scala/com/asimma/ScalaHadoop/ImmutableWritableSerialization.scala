@@ -19,15 +19,32 @@ import org.apache.hadoop.io.serializer.{Deserializer, WritableSerialization}
 import org.apache.hadoop.io.Writable
 import org.apache.hadoop.conf.{Configuration, Configured}
 import java.io.{IOException, DataInputStream, InputStream}
-import scala.reflect.runtime.universe.TypeTag
+import org.apache.hadoop.util.ReflectionUtils
 
-
+/**
+ * A version of Hadoop WritableSerialization which does not re-use objects
+ */
 class ImmutableWritableSerialization extends WritableSerialization {
 
   override def getDeserializer(writableClass: Class[Writable]) = new ImmutableWritableDeserializer(getConf(), writableClass);
 }
 
-class ImmutableWritableDeserializer[T <: Class[_ <: Writable]](conf: Configuration, writableClass: T)(implicit ttWritableClass: TypeTag[T]) extends Configured(conf) with Deserializer[Writable] {
+/**
+ * Hadoop's org.apache.hadoop.io.serializer.WritableSerialization.WritableDeserializer
+ * can re-use instances of Writable objects by modifying the
+ * reference of their content.
+ * See the Hint on page 236 of the O'Reilly book "Hadoop, The Definitive Guide (3rd-edition)"
+ * and study the code of the Hadoop class, particularly the deserialize(org.apache.hadoop.io.Writable) method
+ *
+ * The Hadoop approach is Mutable
+ * which is somewhat at odd's with what we are doing here in Scala
+ * and can sometimes lead to head scratching issues!
+ *
+ * This class implements an Immutable version of the deserializer which
+ * never re-uses objects, but rather creates new objects
+ * each time.
+ */
+class ImmutableWritableDeserializer(conf: Configuration, writableClass: Class[Writable]) extends Configured(conf) with Deserializer[Writable] {
   private var dataIn : DataInputStream = null;
 
   def open(in: InputStream) {
@@ -42,19 +59,7 @@ class ImmutableWritableDeserializer[T <: Class[_ <: Writable]](conf: Configurati
 
   @throws(classOf[IOException])
   def deserialize(w: Writable) = {
-    def newInstance() = {
-      import scala.reflect.runtime.{universe => ru}
-      val m = ru.runtimeMirror(getClass.getClassLoader)
-      val typ = ru.typeOf(ttWritableClass)
-      val c = typ.typeSymbol.asClass
-      val cm = m.reflectClass(c)
-      val ctor = typ.declaration(ru.nme.CONSTRUCTOR).asMethod
-      val ctorm = cm.reflectConstructor(ctor)
-
-      ctorm(getConf()).asInstanceOf[Writable]
-    }
-
-    val writable = newInstance()
+    val writable = ReflectionUtils.newInstance(writableClass, getConf())
     writable.readFields(dataIn)
     writable
   }
