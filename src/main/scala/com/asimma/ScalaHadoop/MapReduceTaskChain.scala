@@ -230,12 +230,13 @@ object MapReduceTaskChain {
 
   def init: MapReduceTaskChain[None.type, None.type, None.type, None.type] = apply(new Configuration)
 
-  // this allow us to use "input --> mapper --> reducer --> out"
+  // this allows us to use "input --> mapper --> reducer --> out"
   // TODO: to check how to allow types that subclass IO.Input
   implicit def -->[K,V](in: IO.Input[K,V]) = {
     MapReduceTaskChain.init --> in
   }
 
+  // this allows us to use "Array[input] --> mapper --> reducer --> out"
   implicit def -->[K,V](in: Array[IO.Input[K,V]]) = {
     MapReduceTaskChain.init --> in
   }
