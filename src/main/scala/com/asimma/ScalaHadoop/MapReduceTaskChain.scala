@@ -33,7 +33,7 @@ A class representing a bunch (one or more) of map and reduce operations, as well
   a.execute
   </pre>
  */
-class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
+class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable with Logging {
 
   type ConfModifier = MapReduceTaskChain.ConfModifier
 
@@ -202,11 +202,6 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable {
     "Job Debug = " +
       fieldsNameValue(job).map(kv => s"${kv._1}: ${kv._2}").mkString(System.getProperty("line.separator"))
   }
-
-  private lazy val logger = LogFactory.getLog(this.getClass)
-  private def debug(message: => String) = log(logger.isDebugEnabled, logger.debug, message)
-  private def info(message: => String) = log(logger.isInfoEnabled, logger.info, message)
-  private def log(fc: => Boolean, fl: (String) => Unit, message: String) = if(fc) fl(message)
 
   def getConf: Configuration = if (conf == null) prev.getConf else conf
 }
