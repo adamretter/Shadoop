@@ -22,6 +22,7 @@ import com.asimma.ScalaHadoop.typehelper.TextArrayWritable
 import java.io.File
 import scala.io.Source
 import org.specs2.specification.{Step, Fragments}
+import org.apache.hadoop.conf.Configuration
 
 class MapReduceIntegrationSpec extends Specification {
 
@@ -30,11 +31,19 @@ class MapReduceIntegrationSpec extends Specification {
 
   "ScalaHadoop MapReduce" should {
 
-    "Pipe mapper output to reducer input" in {
+    "Pipe mapper output to mutable reducer input" in {
       testController(
-        controller = PipeTextMapReduceController,
+        controller = PipeMapMutableReduceController,
         inputTextFile = "pipe-input.txt",
-        expectedOutputTextFile = "pipe-output.txt"
+        expectedOutputTextFile = "pipe-output-mutable.txt"
+      )
+    }
+
+    "Pipe mapper output to immutable reducer input" in {
+      testController(
+        controller = PipeMapImmutableReduceController,
+        inputTextFile = "pipe-input.txt",
+        expectedOutputTextFile = "pipe-output-immutable.txt"
       )
     }
 
@@ -134,31 +143,46 @@ object ChainDifferentTypesThroughDefaultsMapReduceController extends ScalaHadoop
 
 }
 
-object PipeTextMapReduceController extends ScalaHadoop {
-
-  /**
-   * Simply converts a line of text e.g. "a,b,c" from the input file into "k=a, v=[b,c]"
-   */
-  val mapper = new Mapper[LongWritable, Text, Text, TextArrayWritable] {
-    mapWith {
-      (k, v) =>
-        val fields = v.toString.split(',')
-        List((new Text(fields(0).trim), new TextArrayWritable(List(new Text(fields(1).trim), new Text(fields(2).trim)))))
-    }
+/**
+ * Simply converts a line of text e.g. "a,b,c,...n" from the input file into "k=a, v=[b,c,...n]"
+ */
+class FirstValueIsKeyMapper extends Mapper[LongWritable, Text, Text, TextArrayWritable] {
+  mapWith {
+    (k, v) =>
+      val fields = v.toString.split(',')
+      List((new Text(fields.head.trim), new TextArrayWritable(fields.tail.map(s => new Text(s.trim)))))
   }
+}
 
-  val reducer = new Reducer[Text, TextArrayWritable, Text, TextArrayWritable] {
-    reduceWith {
-      (k, vs) =>
-        for(v <- vs) yield (k, v)
+class IdentityReducer extends Reducer[Text, TextArrayWritable, Text, TextArrayWritable] {
+  reduceWith {
+    (k, vs) =>
+      for(v <- vs) yield (k, v)
+  }
+}
+
+object PipeMapMutableReduceController extends ScalaHadoop {
+  def run(args: Array[String]): Int = {
+    TextInput[Text, TextArrayWritable](args(0)) -->
+      MapReduceTask(new FirstValueIsKeyMapper(), new IdentityReducer(), "PipeMapReduceTest") -->
+      TextOutput[Text, TextArrayWritable](args(1)) execute
+
+    0
+  }
+}
+
+object PipeMapImmutableReduceController extends ScalaHadoop {
+
+  val immutableDeserializationConfModifier = new ConfModifier {
+    def apply(c: Configuration) {
+      c.set("io.serializations", classOf[ImmutableWritableSerialization].getName)
     }
   }
 
   def run(args: Array[String]): Int = {
     TextInput[Text, TextArrayWritable](args(0)) -->
-      MapReduceTask(mapper, reducer, "PipeMapReduceTest") -->
-      //MapReduceTask(mapper, "PipeMapTest") -->
-      //MapReduceTask(reducer, "PipeReduceTest") -->
+      MapReduceTask(new FirstValueIsKeyMapper(), new IdentityReducer(), "PipeImmutableMapReduceTest") -->
+        immutableDeserializationConfModifier -->
         TextOutput[Text, TextArrayWritable](args(1)) execute
 
     0

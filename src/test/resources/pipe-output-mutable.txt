@@ -1,0 +1,5 @@
+TEST	[file:/home/dev/svn-root/trunk/dri-pre-ingest/target/test-classes/utf-8-invalid/27_32/3/IMAG0174.jpg,fmt/43]
+TEST	[file:/home/dev/svn-root/trunk/dri-pre-ingest/target/test-classes/utf-8-invalid/27_32/3/IMAG0174.jpg,fmt/43]
+TEST	[file:/home/dev/svn-root/trunk/dri-pre-ingest/target/test-classes/utf-8-invalid/27_32/3/IMAG0174.jpg,fmt/43]
+TEST	[file:/home/dev/svn-root/trunk/dri-pre-ingest/target/test-classes/utf-8-invalid/27_32/3/IMAG0174.jpg,fmt/43]
+TEST	[file:/home/dev/svn-root/trunk/dri-pre-ingest/target/test-classes/utf-8-invalid/27_32/3/IMAG0174.jpg,fmt/43]
