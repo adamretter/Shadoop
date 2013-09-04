@@ -33,7 +33,7 @@ A class representing a bunch (one or more) of map and reduce operations, as well
   a.execute
   </pre>
  */
-class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable with Logging {
+class MapReduceTaskChain[KIN, VIN, KOUT, VOUT](val conf: Option[Configuration]) extends Cloneable with Logging {
 
   type ConfModifier = MapReduceTaskChain.ConfModifier
 
@@ -43,13 +43,13 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable with Logging {
   /**A pointer to the previous node in the chain is null for the first link.  The type of prev is
   MapReduceTaskChain[_,_,K_FOR_MAP_TASK, V_FOR_MAP_TASK] but I don't want to introduce extra types into
   the parameters */
-  var prev: MapReduceTaskChain[_, _, _, _] = null
+  var prev: MapReduceTaskChain[_, _, _, _] = null //TODO change to val and make an option
 
   /**The task that we need to execute, the first try type parameters have to be equal to
       the last 2 type parameters of prev */
-  var task: MapReduceTask[_, _, KOUT, VOUT] = null
+  var task: MapReduceTask[_, _, KOUT, VOUT] = null      //TODO change to val and make an option
 
-  var conf: Configuration = null
+  //var conf: Configuration = null
   var confModifiers: List[ConfModifier] = List[ConfModifier]()
   var jobModifiers: List[JobModifier] = List[JobModifier]()
 
@@ -67,7 +67,7 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable with Logging {
   /**Returns a new MapReduceTaskChain that, in addition to performing everything specified by
      the current chain, also performs the MapReduceTask passed in */
   def -->[KOUT1, VOUT1](mrt: MapReduceTask[KOUT, VOUT, KOUT1, VOUT1]): MapReduceTaskChain[KIN, VIN, KOUT1, VOUT1] = {
-    val chain = new MapReduceTaskChain[KIN, VIN, KOUT1, VOUT1]()
+    val chain = new MapReduceTaskChain[KIN, VIN, KOUT1, VOUT1](None)
     chain.prev = this
     chain.task = mrt
     return chain
@@ -89,14 +89,14 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable with Logging {
   /** Add a JobModifier to the current task by returning a copy of this chain
       with the JobModifier pushed onto the jobModifiers list */
   def -->(jobModifier: JobModifier) : thisType = {
-    val chain = cloneTypesafe;
-    chain.jobModifiers = jobModifier::chain.jobModifiers;
-    return chain;
+    val chain = cloneTypesafe
+    chain.jobModifiers = jobModifier::chain.jobModifiers
+    return chain
   }
 
   /**Adds an input source to the chain */
   def -->[K, V](in: IO.Input[K, V]): MapReduceTaskChain[KIN, VIN, K, V] = {
-    val chain = new MapReduceTaskChain[KIN, VIN, K, V]()
+    val chain = new MapReduceTaskChain[KIN, VIN, K, V](None)
     chain.prev = this
     chain.inputs = Array(in)
     return chain
@@ -104,10 +104,10 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable with Logging {
 
   /** Adds multiple input sources to the chain */
   def -->[K,V](inputs: Array[IO.Input[K,V]]): MapReduceTaskChain[KIN, VIN, K, V] = {
-    val chain = new MapReduceTaskChain[KIN, VIN, K, V]();
-    chain.prev = this;
-    chain.inputs = inputs;
-    return chain;
+    val chain = new MapReduceTaskChain[KIN, VIN, K, V](None)
+    chain.prev = this
+    chain.inputs = inputs
+    return chain
   }
 
   /**Adds an output sink to the chain */
@@ -127,9 +127,7 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable with Logging {
 
       info(s"Executing task '${task.name}'...")
 
-      val conf = getConf
-      // Off the bat, apply the modifications from all the ConfModifiers we have queued up at this node.
-      confModifiers map ((mod: ConfModifier) => mod(conf))
+      val conf = getEffectiveConf //TODO need to apply conf to input formatters too!
 
       val job = task initJob conf
 
@@ -203,7 +201,27 @@ class MapReduceTaskChain[KIN, VIN, KOUT, VOUT] extends Cloneable with Logging {
       fieldsNameValue(job).map(kv => s"${kv._1}: ${kv._2}").mkString(System.getProperty("line.separator"))
   }
 
-  def getConf: Configuration = if (conf == null) prev.getConf else conf
+  /**
+   * Get's the configuration that is effective
+   * for this link in the chain.
+   * All previous conf modifiers are applied
+   */
+  def getEffectiveConf: Configuration = {
+    def fromRoot(chain: MapReduceTaskChain[_, _, _, _]) : List[MapReduceTaskChain[_, _, _, _]] = {
+      if(chain.prev == null) {
+        List.empty :+ chain
+      } else {
+        fromRoot(chain.prev) :+ chain
+      }
+    }
+
+    val chain = fromRoot(this)
+    val rootConf = chain.head.conf.get
+    val conf = new Configuration(rootConf)
+    chain map ((link: MapReduceTaskChain[_,_,_,_]) => link.confModifiers map ((mod: ConfModifier) => mod(conf)))
+    conf
+  }
+
 }
 
 object MapReduceTaskChain {
@@ -223,12 +241,16 @@ object MapReduceTaskChain {
   def Param(p: String, v: String) = new SetParam(p, v)
 
   def apply(conf: Configuration): MapReduceTaskChain[None.type, None.type, None.type, None.type] = {
-    val c = new MapReduceTaskChain[None.type, None.type, None.type, None.type]()
-    c.conf = conf
-    return c
+//    val c = new MapReduceTaskChain[None.type, None.type, None.type, None.type]()
+//    c.conf = conf
+//    return c
+    new MapReduceTaskChain[None.type, None.type, None.type, None.type](Option(conf))
   }
 
   def init: MapReduceTaskChain[None.type, None.type, None.type, None.type] = apply(new Configuration)
+
+  //TODO after conf --> make sure an Input must be specified!
+  implicit def -->(conf: Configuration):  MapReduceTaskChain[None.type, None.type, None.type, None.type] = apply(conf)
 
   // this allows us to use "input --> mapper --> reducer --> out"
   // TODO: to check how to allow types that subclass IO.Input
@@ -243,18 +265,18 @@ object MapReduceTaskChain {
 
 
   class SetPartitioner(val partitionerClass: java.lang.Class[_ <: org.apache.hadoop.mapreduce.Partitioner[_, _]]) extends JobModifier {
-    def apply(job: Job) : Unit = { job.setPartitionerClass(partitionerClass); }
+    def apply(job: Job) : Unit = job.setPartitionerClass(partitionerClass)
   }
   def Partitioner(partitionerClass: java.lang.Class[_ <: org.apache.hadoop.mapreduce.Partitioner[_, _]]) =
-    new SetPartitioner(partitionerClass);
+    new SetPartitioner(partitionerClass)
 
   class SetNumReduceTasks(val numReduceTasks: Int) extends JobModifier {
-    def apply(job: Job) : Unit = { job.setNumReduceTasks(numReduceTasks); }
+    def apply(job: Job) : Unit = job.setNumReduceTasks(numReduceTasks)
   }
-  def NumReduceTasks(numReduceTasks: Int) = new SetNumReduceTasks(numReduceTasks);
+  def NumReduceTasks(numReduceTasks: Int) = new SetNumReduceTasks(numReduceTasks)
 }
 
 // Expose setX() methods on the Job object via JobModifiers
 trait JobModifier {
-  def apply(job: Job) : Unit;
+  def apply(job: Job) : Unit
 }
