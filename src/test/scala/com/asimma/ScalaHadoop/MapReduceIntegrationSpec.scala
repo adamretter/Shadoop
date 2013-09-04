@@ -154,12 +154,7 @@ class FirstValueIsKeyMapper extends Mapper[LongWritable, Text, Text, TextArrayWr
   }
 }
 
-class IdentityReducer extends Reducer[Text, TextArrayWritable, Text, TextArrayWritable] {
-  reduceWith {
-    (k, vs) =>
-      for(v <- vs) yield (k, v)
-  }
-}
+class IdentityReducer extends com.asimma.ScalaHadoop.identity.IdentityReducer[Text, TextArrayWritable]
 
 object PipeMapMutableReduceController extends ScalaHadoop {
   def run(args: Array[String]): Int = {
