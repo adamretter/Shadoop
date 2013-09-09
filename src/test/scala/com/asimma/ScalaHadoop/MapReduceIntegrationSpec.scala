@@ -21,7 +21,6 @@ import com.asimma.ScalaHadoop.MapReduceTaskChain._
 import com.asimma.ScalaHadoop.typehelper.TextArrayWritable
 import java.io.File
 import scala.io.Source
-import org.specs2.specification.{Step, Fragments}
 import org.apache.hadoop.conf.Configuration
 
 class MapReduceIntegrationSpec extends Specification {
