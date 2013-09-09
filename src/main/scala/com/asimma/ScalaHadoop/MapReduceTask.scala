@@ -28,11 +28,10 @@ case class MapReduceTask[KIN, VIN, KOUT, VOUT](mapper: Option[Mapper[KIN, VIN, _
   def initJob(conf: Configuration): Job = {
     val job = new Job(conf, this.name)
 
-    //job.setJarByClass(mapper.getClass)
-
     mapper match {
       case Some(m) =>
         job.setMapperClass(m.getClass.asInstanceOf[Class[HMapper[KIN, VIN, _, _]]])
+        job.setJarByClass(m.getClass)
       case None =>
     }
 
@@ -55,6 +54,7 @@ case class MapReduceTask[KIN, VIN, KOUT, VOUT](mapper: Option[Mapper[KIN, VIN, _
           case None =>
             job.setMapOutputKeyClass(r.kinType)
             job.setMapOutputValueClass(r.vinType)
+            job.setJarByClass(r.getClass)
         }
 
       case None if(!mapper.isEmpty) =>
