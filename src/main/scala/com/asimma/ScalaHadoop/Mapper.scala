@@ -21,7 +21,7 @@ import org.apache.hadoop.mapreduce.{Mapper => HMapper}
 import scala.Some
 
 abstract class Mapper[KIN, VIN, KOUT, VOUT](implicit kTypeM: Manifest[KOUT], vTypeM: Manifest[VOUT])
-  extends HMapper[KIN, VIN, KOUT, VOUT] with OutTyped[KOUT, VOUT] {
+  extends HMapper[KIN, VIN, KOUT, VOUT] with OutTyped[KOUT, VOUT] with MapReduceConfig {
 
   type ContextType = HMapper[KIN, VIN, KOUT, VOUT]#Context
 
@@ -33,6 +33,10 @@ abstract class Mapper[KIN, VIN, KOUT, VOUT](implicit kTypeM: Manifest[KOUT], vTy
 
 	override def map(k: KIN, v: VIN, context: ContextType): Unit = {
 		mapper.map(func => func(k, v).map(pair => context.write(pair._1, pair._2)))
+  }
+
+  override def setup(context: ContextType) {
+    this.configuration = Option(context.getConfiguration)
   }
 
 	def mapWith(f:MapperType) = mapper = Some(f)

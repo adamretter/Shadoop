@@ -20,7 +20,7 @@ import collection.JavaConversions._
 import org.apache.hadoop.mapreduce.{Reducer => HReducer}
 
 class Reducer[KIN, VIN, KOUT, VOUT](implicit kinTypeM: Manifest[KIN], vinTypeM: Manifest[VIN], kTypeM: Manifest[KOUT], vTypeM: Manifest[VOUT])
-  extends HReducer[KIN, VIN, KOUT, VOUT] with OutTyped[KOUT, VOUT] {
+  extends HReducer[KIN, VIN, KOUT, VOUT] with OutTyped[KOUT, VOUT] with MapReduceConfig {
 
   type ContextType = HReducer[KIN, VIN, KOUT, VOUT]#Context
 	type ReducerType = (KIN,Iterable[VIN]) => Iterable[(KOUT,VOUT)]
@@ -55,4 +55,8 @@ class Reducer[KIN, VIN, KOUT, VOUT](implicit kinTypeM: Manifest[KIN], vinTypeM: 
 	 * Use this method to provide the function that will be used for the reducer
 	 */
 	def reduceWith(f:ReducerType) = reducer = Some(f)
+
+  override def setup(context: ContextType) {
+    this.configuration = Option(context.getConfiguration)
+  }
 }
