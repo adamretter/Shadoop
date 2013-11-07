@@ -18,9 +18,11 @@ package com.asimma.ScalaHadoop
 import org.apache.hadoop.conf.Configured
 import org.apache.hadoop.util.{ToolRunner, Tool}
 
-abstract class ScalaHadoop extends Configured with Tool {
+abstract class ScalaHadoop extends Configured with Tool with Logging {
   def main(args: Array[String]) {
-    ToolRunner.run(this, args)
+    val exitCode = ToolRunner.run(this, args)
+    debug("Hadoop job completed with exit code = " + exitCode)
+    System.exit(exitCode)
   }
 }
 
