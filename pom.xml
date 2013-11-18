@@ -253,6 +253,18 @@
 
   </build>
 
+  <pluginRepositories>
+    <pluginRepository>
+      <id>sonatype-releases</id>
+      <url>http://oss.sonatype.org/content/repositories/releases</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>clojars.org</id>
+      <url>http://clojars.org/repo</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+
   <developers>
     <developer>
       <name>Adam Retter</name>
