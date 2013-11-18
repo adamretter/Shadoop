@@ -15,7 +15,7 @@
  */
 // This is inspired by Shadoop
 // (http://blog.jonhnnyweslley.net/2008/05/shadoop.html)
-package com.asimma.ScalaHadoop
+package shadoop
 
 import org.apache.hadoop.io._
 

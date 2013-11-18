@@ -13,24 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.asimma.ScalaHadoop
+package shadoop
 
-import org.apache.hadoop.conf.Configuration
+trait OutTyped[KOUT, VOUT] {
+  def kType: java.lang.Class[KOUT]
 
-trait MapReduceConfig {
-
-  var configuration: Option[Configuration] = None
-
-  def config(key: String, defaultValue: Option[String] = None): Option[String] = {
-    configuration.flatMap {
-      conf =>
-        defaultValue match {
-          case Some(default) =>
-            Option(conf.get(key, default))
-          case None =>
-            Option(conf.get(key))
-        }
-    }
-  }
-
+  def vType: java.lang.Class[VOUT]
 }

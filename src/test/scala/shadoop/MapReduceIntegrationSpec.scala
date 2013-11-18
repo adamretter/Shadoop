@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.asimma.ScalaHadoop
+package shadoop
 
 import org.specs2.mutable._
 import org.apache.hadoop.io.{LongWritable, Text}
-import com.asimma.ScalaHadoop.MapReduceTaskChain._
-import com.asimma.ScalaHadoop.typehelper.TextArrayWritable
+import shadoop.MapReduceTaskChain._
+import shadoop.typehelper.TextArrayWritable
 import java.io.File
 import scala.io.Source
 import org.specs2.specification.{Step, Fragments}
@@ -29,7 +29,7 @@ class MapReduceIntegrationSpec extends Specification {
   sequential
 
 
-  "ScalaHadoop MapReduce" should {
+  "shadoop MapReduce" should {
 
     "Pipe mapper output to mutable reducer input" in {
       testController(

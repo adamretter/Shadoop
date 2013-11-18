@@ -15,14 +15,14 @@
  */
 package net.renalias.scoop.examples
 
-import com.asimma.ScalaHadoop._
-import com.asimma.ScalaHadoop.MapReduceTaskChain._
+import shadoop._
+import shadoop.MapReduceTaskChain._
 import org.apache.hadoop.io.{LongWritable, Text}
 
 object WordCount extends ScalaHadoop {
 
-	import com.asimma.ScalaHadoop.ImplicitConversion._
-	import com.asimma.ScalaHadoop.MapReduceTask._
+	import shadoop.ImplicitConversion._
+	import shadoop.MapReduceTask._
 
 	// TODO: there should be no need to explicitly create Text and LongWritable object because there are implicit
 	// conversions in place...

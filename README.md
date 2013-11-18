@@ -1,6 +1,9 @@
-# ScalaHadoop
+# Shadoop
 
-[![Build Status](https://travis-ci.org/adamretter/ScalaHadoop.png?branch=master)](https://travis-ci.org/adamretter/ScalaHadoop)
+A Hadoop DSL and lightweight wrapper for Scala
+
+
+[![Build Status](https://travis-ci.org/adamretter/Shadoop.png?branch=master)](https://travis-ci.org/adamretter/Shadoop)
 
 This fork of ScalaHadop is mostly just cherry-picked commits from the forks by [@hito-asa](https://github.com/hiti-asa/ScalaHadoop), [@ivmaykov](https://github.com/ivmaykov/ScalaHadoop) and [@oscarrenalis](https://github.com/oscarrenalias/ScalaHadoop), of the original work by [@bsdfish](https://github.com/bsdfish/ScalaHadoop). In addition there are a few extra features and a cleaned up Maven build.
 
@@ -90,4 +93,4 @@ object WordsWithSameCount extends ScalaHadoop {
 - **ASAI Hitoshi**: Cherry-picked - Code re-organisation and initial Maven build. https://github.com/hiti-asa/ScalaHadoop
 - **Ilya Maykov**: Cherry-picked - Various fixes, and support for Multiple Input Paths. https://github.com/ivmaykov/ScalaHadoop
 - **Oscar Renalias**: Cherry-picked - Scala Syntax improvements. https://github.com/oscarrenalias/ScalaHadoop
-
+- **Rob Walpole**: Various bug fixes: https://github.com/rwalpole/ScalaHadoop

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.asimma.ScalaHadoop
+package shadoop
 
 import org.apache.hadoop.io.serializer.{Deserializer, WritableSerialization}
 import org.apache.hadoop.io.Writable

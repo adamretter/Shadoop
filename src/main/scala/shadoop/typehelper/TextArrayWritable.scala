@@ -13,23 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.asimma.ScalaHadoop
+package shadoop.typehelper
 
-import org.apache.hadoop.conf.Configured
-import org.apache.hadoop.util.{ToolRunner, Tool}
+import org.apache.hadoop.io.Text
 
-abstract class ScalaHadoop extends Configured with Tool with Logging {
-  def main(args: Array[String]) {
-    val exitCode = ToolRunner.run(this, args)
-    debug("Hadoop job completed with exit code = " + exitCode)
-    System.exit(exitCode)
-  }
+class TextArrayWritable(values: Seq[Text]) extends ArrayWritable[Text](values) with ArrayWritableType[Text] {
+  type ConcreteArrayWritable = TextArrayWritable
+
+  def this() = this(Seq.empty[Text])
+
+  protected def make(values: Seq[Text]) = new TextArrayWritable(values)
 }
 
+object TextArrayWritable extends AbstractArrayWritableObject[Text] {
+  type ConcreteArrayWritable = TextArrayWritable
 
-
-
-
-
-
-
+  override def apply(values: Seq[Text]) = new TextArrayWritable(values)
+  override def apply(values: Array[Text]) = new TextArrayWritable(values)
+}

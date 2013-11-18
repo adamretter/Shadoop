@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.asimma.ScalaHadoop
+package shadoop
 
 import org.specs2.mutable.Specification
 import org.apache.hadoop.io.Text
-import com.asimma.ScalaHadoop.typehelper.TextArrayWritable
+import shadoop.typehelper.TextArrayWritable
 
 class ReducerSpec extends Specification {
 
