@@ -29,7 +29,7 @@
 
   <scm>
 	<connection>scm:git:https://github.com/adamretter/Shadoop.git</connection>
-	<developerConnection>scm:git:https://git@github.com/adamretter/Shadoop.git</developerConnection>
+	<developerConnection>scm:git:https://github.com/adamretter/Shadoop.git</developerConnection>
     <url>https://github.com/adamretter/Shadoop</url>
   </scm>
 
