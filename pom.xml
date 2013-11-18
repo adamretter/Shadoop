@@ -10,12 +10,14 @@
   	<version>7</version>
   </parent>
 
-  <name>Scala Hadoop Library</name>
+  <name>Shadoop, The Scala Hadoop Library</name>
   <description>A lightweight wrapper and DSL for using Hadoop from Scala</description>
 
-  <groupId>com.asimma.ScalaHadoop</groupId>
-  <artifactId>ScalaHadoop</artifactId>
+  <groupId>shadoop</groupId>
+  <artifactId>shadoop</artifactId>
   <version>1.0-SNAPSHOT</version>
+
+  <inceptionYear>2013</inceptionYear>
 
   <licenses>
       <license>
@@ -26,9 +28,9 @@
   </licenses>
 
   <scm>
-	<connection>scm:git:https://github.com/adamretter/ScalaHadoop.git</connection>
-	<developerConnection>scm:git:https://git@github.com/adamretter/ScalaHadoop.git</developerConnection>
-    <url>https://github.com/adamretter/ScalaHadoop</url>
+	<connection>scm:git:https://github.com/adamretter/Shadoop.git</connection>
+	<developerConnection>scm:git:https://git@github.com/adamretter/Shadoop.git</developerConnection>
+    <url>https://github.com/adamretter/Shadoop</url>
   </scm>
 
   <properties>
@@ -61,7 +63,7 @@
     <dependency>
       <groupId>org.specs2</groupId>
       <artifactId>specs2_2.10</artifactId>
-      <version>2.1.1</version>
+      <version>2.2.3</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -74,27 +76,37 @@
         <plugin>
           <groupId>net.alchim31.maven</groupId>
           <artifactId>scala-maven-plugin</artifactId>
-          <version>3.1.5</version>
+          <version>3.1.6</version>
         </plugin>
         <plugin>
           <groupId>com.mmakowski</groupId>
           <artifactId>maven-specs2-plugin</artifactId>
-          <version>0.4.1</version>
+          <version>0.4.2</version>
         </plugin>
 		<plugin>
-		  <groupId>com.mycila.maven-license-plugin</groupId>
-		  <artifactId>maven-license-plugin</artifactId>
-		  <version>1.9.0</version>
+          <groupId>com.mycila</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>2.5</version>
 		</plugin>
+        <plugin>
+          <groupId>com.code54.mojo</groupId>
+          <artifactId>buildversion-plugin</artifactId>
+          <version>1.0.3</version>
+        </plugin>
 		<plugin>
 		  <groupId>org.apache.maven.plugins</groupId>
 		  <artifactId>maven-source-plugin</artifactId>
 		  <version>2.2.1</version>
 		</plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>2.4</version>
+        </plugin>
 	  	<plugin>
 		  <groupId>org.apache.maven.plugins</groupId>
 		  <artifactId>maven-release-plugin</artifactId>
-		  <version>2.4.1</version>
+		  <version>2.4.2</version>
 		</plugin>
       </plugins>
     </pluginManagement>
@@ -135,33 +147,30 @@
             </goals>
           </execution>
         </executions>
-        <dependencies>
-          <dependency>
-            <groupId>org.pegdown</groupId>
-            <artifactId> pegdown</artifactId>
-            <version>1.4.1</version>
-            <scope>runtime</scope>
-          </dependency>
-        </dependencies>
       </plugin>
 	  <plugin>
-		<groupId>com.mycila.maven-license-plugin</groupId>
-		<artifactId>maven-license-plugin</artifactId>
+		<groupId>com.mycila</groupId>
+		<artifactId>license-maven-plugin</artifactId>
 		<inherited>true</inherited>
 		<configuration>
-		  <header>license-header.txt</header>
+          <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
 		  <failIfMissing>true</failIfMissing>
 		  <strictCheck>true</strictCheck>
 		  <encoding>${project.build.sourceEncoding}</encoding>
+          <properties>
+              <owner>Adam Retter</owner>
+              <email>adam.retter@googlemail.com</email>
+          </properties>
 	      <excludes>
 			<exclude>README.md</exclude>
 			<exclude>LICENSE</exclude>
             <exclude>NOTICES</exclude>
-			<exclude>license-header.txt</exclude>
 			<exclude>.gitignore</exclude>
 			<exclude>.travis.yml</exclude>
 		    <exclude>.idea/**</exclude>
             <exclude>src/test/resources/**</exclude>
+            <exclude>pom.xml</exclude>
+            <exclude>tmp/**</exclude>
 		  </excludes>
 		</configuration>
 		<executions>
@@ -174,6 +183,39 @@
 		  </execution>
 		</executions>
 	  </plugin>
+      <plugin>
+        <groupId>com.code54.mojo</groupId>
+        <artifactId>buildversion-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>set-properties</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+            <manifestEntries>
+              <Build-Tag>${build-tag}</Build-Tag>
+              <Git-Commit>${build-commit}</Git-Commit>
+              <Git-Commit-Abbrev>${build-commit-abbrev}</Git-Commit-Abbrev>
+              <Build-Version>${build-version}</Build-Version>
+              <Build-Timestamp>${build-tstamp}</Build-Timestamp>
+              <Source-Repository>${project.scm.connection}</Source-Repository>
+              <Description>${project.description}</Description>
+              <Implementation-URL>${project.url}</Implementation-URL>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
 	  <plugin>
 		<groupId>org.apache.maven.plugins</groupId>
 		<artifactId>maven-source-plugin</artifactId>
@@ -213,11 +255,18 @@
 
   <developers>
     <developer>
-    	  <name>Adam Retter</name>
-    	  <roles>
-    	  	<role>Developer</role>
-    	  </roles>
-    	  <url>https://github.com/adamretter/ScalaHadoop</url>
+      <name>Adam Retter</name>
+      <roles>
+        <role>Developer</role>
+      </roles>
+      <url>https://github.com/adamretter/ScalaHadoop</url>
+    </developer>
+    <developer>
+      <name>Rob Walpole</name>
+      <roles>
+        <role>Contributor</role>
+      </roles>
+      <url>https://github.com/rwalpole/ScalaHadoop</url>
     </developer>
     <developer>
 	  <name>Alex Sima</name>
