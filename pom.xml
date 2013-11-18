@@ -10,14 +10,14 @@
   	<version>7</version>
   </parent>
 
-  <name>Shadoop, The Scala Hadoop Library</name>
-  <description>A lightweight wrapper and DSL for using Hadoop from Scala</description>
-
   <groupId>shadoop</groupId>
   <artifactId>shadoop</artifactId>
   <version>1.0-SNAPSHOT</version>
 
+  <name>Shadoop, The Scala Hadoop Library</name>
+  <description>A lightweight wrapper and DSL for using Hadoop from Scala</description>
   <inceptionYear>2013</inceptionYear>
+  <url>https://github.com/adamretter/Shadoop</url>
 
   <licenses>
       <license>
