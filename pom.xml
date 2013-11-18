@@ -10,7 +10,7 @@
 
   <groupId>uk.org.adamretter.shadoop</groupId>
   <artifactId>shadoop</artifactId>
-  <version>1.0</version>
+  <version>1.1-SNAPSHOT</version>
 
   <name>Shadoop, The Scala Hadoop Library</name>
   <description>A lightweight wrapper and DSL for using Hadoop from Scala</description>
@@ -29,7 +29,7 @@
 	<connection>scm:git:https://github.com/adamretter/Shadoop.git</connection>
 	<developerConnection>scm:git:https://github.com/adamretter/Shadoop.git</developerConnection>
     <url>https://github.com/adamretter/Shadoop</url>
-    <tag>shadoop-1.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
