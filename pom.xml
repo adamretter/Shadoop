@@ -10,7 +10,7 @@
   	<version>7</version>
   </parent>
 
-  <groupId>shadoop</groupId>
+  <groupId>uk.org.adamretter.shadoop</groupId>
   <artifactId>shadoop</artifactId>
   <version>1.0-SNAPSHOT</version>
 
